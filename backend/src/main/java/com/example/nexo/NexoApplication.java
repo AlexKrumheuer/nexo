@@ -9,5 +9,4 @@ public class NexoApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(NexoApplication.class, args);
 	}
-
 }
