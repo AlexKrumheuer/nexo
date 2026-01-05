@@ -3,13 +3,13 @@ package com.zchat.service;
 import com.zchat.dto.CreateUserDto;
 import com.zchat.dto.UpdateUserDto;
 import com.zchat.entity.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.zchat.repository.UserRepository;
-
-import java.time.Instant;
+import org.springframework.web.server.ResponseStatusException;
+import com.zchat.entity.Role;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class UserService {
@@ -27,14 +27,13 @@ public class UserService {
                 createUserDto.username(),
                 createUserDto.email(),
                 createUserDto.password(),
-                Instant.now(),
-                null,
+                createUserDto.role(),
                 null);
 
         return userRepository.save(entity);
     }
 
-    public Optional<User> getUserById(UUID userId) {
+    public Optional<User> getUserById(Long userId) {
         return userRepository.findById(userId);
     }
 
@@ -42,25 +41,17 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public void updateUserById(UUID userId, UpdateUserDto updateUserDto) {
+    public User updateUserById(Long userId, UpdateUserDto updateUserDto) {
+        User user = userRepository.findById(userId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        user.setUsername(updateUserDto.username());
+        user.setPassword(updateUserDto.password());
+        user.setProfilePictureUrl(updateUserDto.profilePictureUrl());
+        user.setEmail(updateUserDto.email());
 
-        Optional<User> userEntityOptional = userRepository.findById(userId);
-
-        userEntityOptional.ifPresent(user -> {
-            if (updateUserDto.username() != null) {
-                user.setUsername(updateUserDto.username());
-            }
-            if (updateUserDto.password() != null) {
-                user.setPassword(updateUserDto.password());
-            }
-            if (updateUserDto.profilePictureUrl() != null) {
-                user.setProfilePictureUrl(updateUserDto.profilePictureUrl());
-            }
-            userRepository.save(user);
-        });
+        return userRepository.save(user);
     }
 
-    public void deleteById(UUID userId) {
+    public void deleteById(Long userId) {
         userRepository.deleteById(userId);
     }
 }

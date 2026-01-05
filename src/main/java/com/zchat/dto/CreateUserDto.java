@@ -1,4 +1,11 @@
 package com.zchat.dto;
 
-public record CreateUserDto(String email, String password, String username) {
+import com.zchat.entity.Role;
+
+public record CreateUserDto(
+        String email,
+        String password,
+        String username,
+        Role role
+    ) {
 }

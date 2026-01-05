@@ -10,7 +10,6 @@ import com.zchat.service.UserService;
 
 import java.net.URI;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/users")
@@ -36,7 +35,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<User> getUserById(@PathVariable("userId") UUID userId) {
+    public ResponseEntity<User> getUserById(@PathVariable("userId") Long userId) {
         return userService.getUserById(userId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -49,14 +48,14 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<Void> updateUserById(@PathVariable("userId") UUID userId,
+    public ResponseEntity<User> updateUserById(@PathVariable("userId") Long userId,
                                                @RequestBody UpdateUserDto updateUserDto) {
-        userService.updateUserById(userId, updateUserDto);
-        return ResponseEntity.noContent().build();
+        User user = userService.updateUserById(userId, updateUserDto);
+        return ResponseEntity.ok(user);
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable("userId") UUID userId) {
+    public ResponseEntity<Void> deleteUserById(@PathVariable("userId") Long userId) {
         userService.deleteById(userId);
         return ResponseEntity.noContent().build();
     }
