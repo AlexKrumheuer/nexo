@@ -4,12 +4,9 @@ package com.example.nexo.service;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import com.example.nexo.dto.CreateUserDto;
 import com.example.nexo.dto.UpdateUserDto;
 import com.example.nexo.entity.User;
 import com.example.nexo.repository.UserRepository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -22,15 +19,6 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User createUser(CreateUserDto createUserDto) {
-
-        User entity = new User(
-                createUserDto.username(),
-                createUserDto.email(),
-                createUserDto.password());
-
-        return userRepository.save(entity);
-    }
 
     public Optional<User> getUserById(Long userId) {
         return userRepository.findById(userId);

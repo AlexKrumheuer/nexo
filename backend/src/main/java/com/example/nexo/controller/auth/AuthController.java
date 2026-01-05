@@ -1,14 +1,19 @@
 package com.example.nexo.controller.auth;
 
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.nexo.dto.CreateUserDto;
+import com.example.nexo.dto.LoginResponseDTO;
+import com.example.nexo.dto.LoginUserDTO;
 import com.example.nexo.entity.User;
-import com.example.nexo.repository.UserRepository;
-import com.example.nexo.service.UserService;
+import com.example.nexo.service.AuthService;
+
 
 import jakarta.validation.Valid;
 
@@ -20,14 +25,30 @@ import org.springframework.web.bind.annotation.RequestBody;
 @CrossOrigin("*")
 @RequestMapping("/auth")
 public class AuthController {
-    private final UserService userService;
-    public AuthController(UserService userService) {
-        this.userService = userService;
+    private final AuthService authService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody @Valid CreateUserDto data) {
-        
-        return entity;
+        try {
+            User userSave = authService.createUser(data);
+            return ResponseEntity.ok(userSave);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<Object> loginUser(@RequestBody @Valid LoginUserDTO data) {
+        try {
+            LoginResponseDTO token = authService.loginUser(data);
+            return ResponseEntity.ok(token);
+        } catch(AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid Credentials");
+        }
+
+    }
+    
     
 }

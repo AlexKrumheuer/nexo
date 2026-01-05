@@ -4,10 +4,6 @@ package com.example.nexo.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.nexo.service.UserService;
-
-import jakarta.validation.Valid;
-
-import com.example.nexo.dto.CreateUserDto;
 import com.example.nexo.dto.UpdateUserDto;
 import com.example.nexo.entity.User;
 
@@ -22,13 +18,6 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
-    }
-
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody @Valid CreateUserDto createUserDto) {
-        User createdUser = userService.createUser(createUserDto);
-
-        return ResponseEntity.ok(createdUser);
     }
 
     @GetMapping("/{userId}")
