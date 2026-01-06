@@ -1,0 +1,78 @@
+.container-auth--center {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #F8FAFC;
+    }
+    .container-auth {
+        min-width: 30%;
+        background-color:#FFF;
+        display: flex;
+        flex-direction: column;
+        padding: 2rem;
+        gap: 1rem;
+        border-radius: 8px;
+    }
+
+    .auth-title {
+        color: #1E293B;
+        text-align: center;
+        font-size: 1.7rem;
+    }
+
+    .container-input {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .container-input label {
+        color: #64748B;
+        font-size: 0.9rem;
+    }
+
+    .container-input input {
+        border: 1px solid #CBD5E1;
+        padding: 0.8rem;
+        border-radius: 8px;
+    }
+
+    .auth-submit--button {
+        background-color: #4338CA;
+        color: #FFFFFF;
+        padding: 0.8rem;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        transition: 0.25s;
+    }
+
+    .auth-submit--button:hover {
+        color: #4338CA;
+        background-color: #fff;
+        border: 1px #4338CA solid;
+    }
+
+    .auth-little__text {
+        font-size: 0.8rem;
+        text-align: center;
+        color: #64748B;
+    }
+
+    .sign-text {
+        color: #4F46E5;
+        font-size: 0.8rem;
+    }
+
+    .sign-text:hover {
+        font-weight: bold;
+    }
+
+    .error {
+        color: red;
+        font-size: 0.9rem;
+    }
