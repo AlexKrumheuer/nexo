@@ -7,5 +7,7 @@ public record CreateProductDTO(
     String description,
     BigDecimal price,
     Integer discountPercent,
+    BigDecimal finalPrice,
+    Integer stockQuantity,
     String brand
 ) {}

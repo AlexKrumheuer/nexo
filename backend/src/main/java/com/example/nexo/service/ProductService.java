@@ -18,18 +18,7 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     public ProductResponseDTO create (CreateProductDTO dto){
-        Product Product = new Product();
-
-        Product.setTitle(dto.title());
-        Product.setDescription(dto.description());
-        Product.setPrice(dto.price());
-        Product.setDiscountPercent(dto.discountPercent());
-        Product.setBrand(dto.brand());
-
-        Product.setSlug(generateSlug(dto.title()));
-        Product.setPrice(calculateFinalPrice(dto.price(), dto.discountPercent()));
-        Product.setCreatedAt(LocalDateTime.now());
-        Product.setUpdatedAt(LocalDateTime.now());
+        Product Product = new Product(dto.title(), dto.price(), dto.discountPercent(), dto.finalPrice(), dto.stockQuantity(), dto.brand());
 
         productRepository.save (Product);
 
