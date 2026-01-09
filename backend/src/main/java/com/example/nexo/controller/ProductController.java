@@ -1,0 +1,42 @@
+package com.example.nexo.controller;
+
+import com.example.nexo.dto.CreateProductDTO;
+import com.example.nexo.dto.ProductResponseDTO;
+import com.example.nexo.dto.UpdateProductDTO;
+import com.example.nexo.service.ProductService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/products")
+@RequiredArgsConstructor
+public class ProductController {
+
+    private final ProductService productService;
+
+    @PostMapping
+    public ResponseEntity<ProductResponseDTO> create(@RequestBody CreateProductDTO dto) {
+        return ResponseEntity.ok(productService.create(dto));
+    }
+
+    @GetMapping
+    public ResponseEntity<ProductResponseDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.findById(id));
+    }
+
+    @PutMapping ("/id")
+    public ResponseEntity<ProductResponseDTO> update(
+            @PathVariable Long id,
+            @RequestBody UpdateProductDTO dto
+            ) {
+        return ResponseEntity.ok(productService.update(id, dto));
+    }
+
+    @DeleteMapping ("/id")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}
