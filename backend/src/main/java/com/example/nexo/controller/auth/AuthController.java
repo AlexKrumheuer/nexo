@@ -13,8 +13,9 @@ import com.example.nexo.dto.LoginResponseDTO;
 import com.example.nexo.dto.LoginUserDTO;
 import com.example.nexo.entity.User;
 import com.example.nexo.service.AuthService;
+import com.example.nexo.service.TokenBlacklistService;
 
-
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,8 +27,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
-    public AuthController(AuthService authService) {
+    private final TokenBlacklistService tokenBlacklistService;
+    public AuthController(AuthService authService, TokenBlacklistService tokenBlacklistService) {
         this.authService = authService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody @Valid CreateUserDto data) {
@@ -49,6 +52,24 @@ public class AuthController {
         }
 
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        String token = recoverToken(request);
+        if(token != null) {
+            tokenBlacklistService.addTokenToBlacklist(token);
+        }
+        return ResponseEntity.ok().build();  
+    }
+
+    private String recoverToken(HttpServletRequest request) {
+        var authHeader = request.getHeader("Authorization");
+        if(authHeader == null) {
+            return null;
+        }
+        return authHeader.replace("Bearer ", "");
+    } 
+    
     
     
 }

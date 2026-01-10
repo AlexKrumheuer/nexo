@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.nexo.repository.UserRepository;
+import com.example.nexo.service.TokenBlacklistService;
 import com.example.nexo.service.TokenService;
 
 import jakarta.servlet.FilterChain;
@@ -20,10 +21,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityFilter extends OncePerRequestFilter {
     private final TokenService tokenService;
     private final UserRepository userRepository;
+    private final TokenBlacklistService tokenBlacklistService;
     
-    public SecurityFilter(TokenService tokkenService, UserRepository userRepository) {
+    public SecurityFilter(TokenService tokkenService, UserRepository userRepository, TokenBlacklistService tokenBlacklistService) {
         this.tokenService = tokkenService;
         this.userRepository = userRepository;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -31,8 +34,12 @@ public class SecurityFilter extends OncePerRequestFilter {
         var token = this.recoverToken(request);
 
         if(token != null){
-            var email = tokenService.validateToken(token); 
+            if(tokenBlacklistService.isTokenBlackListed(token)){
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
 
+            var email = tokenService.validateToken(token);
             if(email != null && !email.isEmpty()){
                 UserDetails user = userRepository.findByEmail(email);
 
