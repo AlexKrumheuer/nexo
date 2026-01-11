@@ -1,0 +1,42 @@
+main {
+    height: auto;
+    width: 100%;
+    background-color: #e9f3fc;
+    display: grid;
+    grid-template-columns: 15% 80%;
+    gap: 2rem;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    padding: 3rem;
+}
+
+.main-content h2 {
+    font-size: 1.5rem;
+}
+
+.wrapper-activity {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.container-activity {
+    display: grid;
+    grid-template-columns: 25% 25% 25%;
+    width: 100%;
+    gap: 1rem;
+}
+
+.container-slider {
+    background-color: #f68c36;
+}
+
+.container-slider-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}

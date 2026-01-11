@@ -1,4 +1,6 @@
-<script></script>
+<script setup>
+  import MainContent from '../components/main_content/MainContent.vue';
+</script>
 <template>
-    <p>parabens voce esta autenticado</p>
+  <MainContent/>
 </template>

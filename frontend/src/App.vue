@@ -1,30 +1,18 @@
 <script setup>
 import Login from './components/auth/Login.vue';
+import './style/style.css'
+import Footer from './components/Footer.vue';
+import Header from './components/Header.vue';
 </script>
 
 <template>
+  <Header/>
   <router-view>
 
   </router-view>
+  <Footer/>
 </template>
 
 <style>
-  * {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    width: 100vw;
-    height: 100vh;
-    font-family: "Inter", "Arial";
-    font-size: 62.5%;
-  }
-
-  #app {
-    width: 100%;
-    height: 100%;
-
-  }
+  
 </style>

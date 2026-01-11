@@ -4,13 +4,14 @@ import Login from '../components/auth/Login.vue'
 import Register from '../components/auth/Register.vue'
 import ForgotYourPassword from '../components/auth/ForgotYourPassword.vue'
 import Dashboard from '../pages/Dashboard.vue'
+import Product from '../pages/Product.vue'
 
 const routes = [
   { path: '/login', component: Login },
   { path: '/register', component: Register },
   { path: '/forgot-password', component: ForgotYourPassword },
-  { path: '/', name: 'Dashboard', component: Dashboard, meta: {requiresAuth: true}
-}
+  { path: '/', name: 'Dashboard', component: Dashboard, meta: {requiresAuth: true}},
+  { path: '/product', name: "Product", component: Product, meta: {requiresAuth: true}}
 ]
 
 const router = createRouter({
