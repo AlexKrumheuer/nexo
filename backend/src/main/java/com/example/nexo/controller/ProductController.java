@@ -4,6 +4,7 @@ import com.example.nexo.dto.CreateProductDTO;
 import com.example.nexo.dto.ProductResponseDTO;
 import com.example.nexo.dto.UpdateProductDTO;
 import com.example.nexo.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<ProductResponseDTO> create(@RequestBody CreateProductDTO dto) {
+    public ResponseEntity<ProductResponseDTO> create(@RequestBody @Valid CreateProductDTO dto) {
         return ResponseEntity.ok(productService.create(dto));
     }
 
