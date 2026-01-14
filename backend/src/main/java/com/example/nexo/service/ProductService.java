@@ -18,11 +18,11 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     public ProductResponseDTO create (CreateProductDTO dto){
-        Product Product = new Product(dto.title(), dto.price(), dto.discountPercent(), dto.finalPrice(), dto.stockQuantity(), dto.brand());
+        Product product = new Product(dto.title(), dto.price(), dto.discountPercent(), dto.finalPrice(), dto.stockQuantity(), dto.brand());
 
-        productRepository.save (Product);
+        productRepository.save (product);
 
-        return mapToResponse(Product);
+        return new ProductResponseDTO(product.getId(), dto.title(), dto.price(), dto.finalPrice(), dto.discountPercent(), dto.stockQuantity(), dto.brand());
     }
 
     public ProductResponseDTO findById(Long id){
