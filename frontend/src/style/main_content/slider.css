@@ -23,7 +23,6 @@
     overflow-x: hidden;
     scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
-    width: 100%;
     padding: 10px 5px;
 }
 
@@ -31,6 +30,7 @@
     flex-shrink: 0;
     flex-basis: calc(25% - 20px); 
     max-width: calc(25% - 20px);
+    scroll-snap-align: start;
 }
 
 .nav-btn {

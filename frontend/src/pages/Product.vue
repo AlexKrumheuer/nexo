@@ -1,41 +1,90 @@
 <script setup>
-// Seus imports e lógica ficam aqui
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import api from '../services/api';
+const route = useRoute()
+const product = ref(null)
+const loading = ref(true)
+
+const formatPrice = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+}
+
+const currentImage = ref('')
+
+onMounted(async () => {
+    const slug = route.params.slug
+    try {
+        const response = await api.get(`/api/products/slug/${slug}`)
+        product.value = response.data
+        if (product.value.images && product.value.images.length > 0) {
+            currentImage.value = product.value.images[0]
+        } else {
+            currentImage.value = '/img/default-product-image.png'
+        }
+    } catch (error) {
+        console.error("Error finding product:", error)
+    } finally {
+        loading.value = false
+    }
+})
+
+const setImage = (imgUrl) => {
+    currentImage.value = imgUrl;
+}
 </script>
 
 <template>
-    <main class="product-container">
+    <div v-if="loading" style="text-align: center; padding: 50px;">
+        <h2>Loading Product...</h2>
+    </div>
+
+    <main v-else-if="product" class="product-container">
+
         <div class="product-gallery">
             <div class="thumbnail-list">
-                <img class="thumb" src="../../img/default-product-image.png" alt="">
-                <img class="thumb" src="../../img/default-product-image.png" alt="">
-                <img class="thumb" src="../../img/default-product-image.png" alt="">
-                <img class="thumb" src="../../img/default-product-image.png" alt="">
+                <img v-for="(img, index) in product.images" :key="index" :src="img" class="thumb"
+                    :class="{ 'active': currentImage === img }" @click="setImage(img)" alt="Thumbnail">
             </div>
             <div class="main-image-wrapper">
-                <img class="main-img" src="../../img/default-product-image.png" alt="Imagem Principal">
+                <img class="main-img" :src="currentImage" :alt="product.title">
             </div>
         </div>
 
         <div class="product-info">
-            <h1 class="title">Fone de Ouvido Bluetooth Noise Cancelling WH-1000XM5</h1>
-            
-            <a href="#" class="seller-link">Visit Seller's shop</a>
-            
+            <h1 class="title">{{ product.title }}</h1>
+
+            <p class="brand">Brand: {{ product.brand }}</p>
+            <a href="#" class="seller-link">Visit shop: {{ product.seller || 'Nexo Oficial' }}</a>
+
             <div class="rating-box">
                 <span class="score">4.7</span>
                 <div class="stars">
-                    <fa icon="star"/>
-                    <fa icon="star"/>
-                    <fa icon="star"/>
-                    <fa icon="star"/>
-                    <fa icon="star"/>
+                    <fa icon="star" />
+                    <fa icon="star" />
+                    <fa icon="star" />
+                    <fa icon="star" />
+                    <fa icon="star" />
                 </div>
                 <span class="reviews">(2947 reviews)</span>
             </div>
-            
+
             <div class="price-section">
-                <h1 class="price">R$ 1.999,00</h1>
-                <p class="installments">em até 10x de R$ 199,90 sem juros</p>
+                <h1 class="price">{{ formatPrice(product.finalPrice) }}</h1>
+
+                <p v-if="product.discountPercent > 0"
+                    style="color: #999; text-decoration: line-through; font-size: 0.9rem;">
+                    {{ formatPrice(product.price) }}
+                </p>
+
+                <p class="installments">
+                    em até 10x de {{ formatPrice(product.finalPrice / 10) }} sem juros
+                </p>
+            </div>
+
+            <div class="description" style="margin-top: 1rem; color: #555;">
+                <h3>About this item</h3>
+                <p>{{ product.description }}</p>
             </div>
         </div>
 
@@ -47,16 +96,23 @@
                     <button>OK</button>
                 </div>
             </div>
-            
+
             <div class="stock-info">
-                <p class="stock">Estoque disponível</p>
-                <p class="seller-price">Vendido por <strong>Nexo Oficial</strong></p>
+                <p v-if="product.stockQuantity > 0" class="stock">Estoque disponível ({{ product.stockQuantity }})</p>
+                <p v-else style="color: red; font-weight: bold;">Esgotado</p>
+
+                <p class="seller-price">Vendido por <strong>{{ product.seller || 'Nexo Oficial' }}</strong></p>
             </div>
 
-            <button class="btn-buy">Comprar Agora</button>
-            <button class="btn-cart">Adicionar ao Carrinho</button>
+            <button :disabled="product.stockQuantity <= 0" class="btn-buy">Comprar Agora</button>
+            <button :disabled="product.stockQuantity <= 0" class="btn-cart">Adicionar ao Carrinho</button>
         </div>
     </main>
+
+    <div v-else style="text-align: center; padding: 50px;">
+        <h2>Product not found</h2>
+        <router-link to="/">Go back Home</router-link>
+    </div>
 </template>
 
 <style scoped>
@@ -65,7 +121,7 @@
     margin: 0 auto;
     padding: 2rem;
     display: grid;
-    grid-template-columns: 45% 30% 20%; 
+    grid-template-columns: 45% 30% 20%;
     gap: 2.5%;
     align-items: start;
     font-family: 'Inter', sans-serif;
@@ -78,7 +134,7 @@
 
 .thumbnail-list {
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
     gap: 10px;
 }
 
@@ -105,7 +161,7 @@
 
 .main-img {
     width: 100%;
-    max-width: 500px; 
+    max-width: 500px;
     object-fit: contain;
 }
 
@@ -133,7 +189,7 @@
     align-items: center;
     gap: 8px;
     font-size: 0.9rem;
-    color: #f68c36; 
+    color: #f68c36;
 }
 
 .reviews {
@@ -162,9 +218,9 @@
     border-radius: 8px;
     padding: 20px;
     background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     position: sticky;
-    top: 20px; 
+    top: 20px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -198,7 +254,7 @@
 
 .stock-info {
     font-size: 0.9rem;
-    color: #16a34a; 
+    color: #16a34a;
     font-weight: 600;
 }
 
@@ -209,7 +265,8 @@
     margin-top: 5px;
 }
 
-.btn-buy, .btn-cart {
+.btn-buy,
+.btn-cart {
     width: 100%;
     padding: 12px;
     border: none;
@@ -218,6 +275,13 @@
     cursor: pointer;
     font-size: 1rem;
     transition: 0.2s;
+}
+
+.btn-buy:disabled,
+.btn-cart:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    color: #666;
 }
 
 .btn-buy {
@@ -230,7 +294,7 @@
 }
 
 .btn-cart {
-    background-color: #eef6fc; 
+    background-color: #eef6fc;
     color: #367cc1;
 }
 
@@ -238,21 +302,49 @@
     background-color: #dbeafe;
 }
 
+.thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: contain; 
+    border: 2px solid #ddd; 
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.7; 
+}
+
+.thumb:hover {
+    opacity: 1;
+    border-color: #999;
+}
+
+.thumb.active {
+    opacity: 1;
+    border-color: #367cc1;
+}
+
+.main-img {
+    width: 100%;
+    max-width: 500px;
+    height: 500px; 
+    object-fit: contain;
+}
+
 @media (max-width: 900px) {
     .product-container {
-        grid-template-columns: 1fr; 
+        grid-template-columns: 1fr;
         gap: 30px;
     }
-    
+
     .product-gallery {
-        flex-direction: column-reverse; 
+        flex-direction: column-reverse;
     }
-    
+
     .thumbnail-list {
         flex-direction: row;
         justify-content: center;
     }
-    
+
     .buy-box {
         position: static;
     }

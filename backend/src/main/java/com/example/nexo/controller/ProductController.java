@@ -3,11 +3,17 @@ package com.example.nexo.controller;
 import com.example.nexo.dto.CreateProductDTO;
 import com.example.nexo.dto.ProductResponseDTO;
 import com.example.nexo.dto.UpdateProductDTO;
+import com.example.nexo.entity.Product;
 import com.example.nexo.service.ProductService;
 
 import jakarta.validation.Valid;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 @RestController
 @RequestMapping("/api/products")
@@ -23,6 +29,28 @@ public class ProductController {
     public ResponseEntity<ProductResponseDTO> create(@RequestBody @Valid CreateProductDTO dto) {
         return ResponseEntity.ok(productService.create(dto));
     }
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<ProductResponseDTO> findBySlug(@PathVariable String slug) {
+        ProductResponseDTO product = productService.productSlug(slug);
+        return ResponseEntity.ok(product);
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<ProductResponseDTO>> getProducts() {
+        return ResponseEntity.ok(productService.findProducts());
+    }
+
+    @GetMapping("/random")
+    public ResponseEntity<List<ProductResponseDTO>> getRandomProducts() {
+        return ResponseEntity.ok(productService.findProducts());
+    }
+
+    @GetMapping("/last")
+    public ResponseEntity<List<ProductResponseDTO>> getLastProducts() {
+        return ResponseEntity.ok(productService.lastProducts());
+    }
+    
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> findById(@PathVariable Long id) {

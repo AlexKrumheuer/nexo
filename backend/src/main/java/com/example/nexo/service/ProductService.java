@@ -4,12 +4,16 @@ import com.example.nexo.dto.CreateProductDTO;
 import com.example.nexo.dto.ProductResponseDTO;
 import com.example.nexo.dto.UpdateProductDTO;
 import com.example.nexo.entity.Product;
+import com.example.nexo.entity.ProductImage;
 import com.example.nexo.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -17,12 +21,53 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    public ProductResponseDTO create (CreateProductDTO dto){
-        Product product = new Product(dto.title(), dto.price(), dto.discountPercent(), dto.finalPrice(), dto.stockQuantity(), dto.brand());
+    public ProductResponseDTO productSlug(String slug) {
+        Product product = productRepository.findBySlug(slug)
+            .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        return mapToResponse(product);  
+    }
+
+    public ProductResponseDTO create (CreateProductDTO dto){
+        String slug = generateSlug(dto.title());
+        Product product = new Product(dto.title(), dto.price(), dto.discountPercent(), dto.finalPrice(), dto.stockQuantity(), dto.brand());
+        product.setSlug(slug);
+        if (dto.images() != null && !dto.images().isEmpty()) {
+        List<ProductImage> imageEntities = dto.images().stream()
+            .map(url -> {
+                ProductImage img = new ProductImage();
+                img.setUrl(url);
+                img.setProduct(product);
+                return img;
+            })
+            .toList();
+
+        product.setImages(imageEntities);
+    }
         productRepository.save (product);
 
-        return new ProductResponseDTO(product.getId(), dto.title(), dto.price(), dto.finalPrice(), dto.discountPercent(), dto.stockQuantity(), dto.brand());
+        return mapToResponse(product);
+    }
+
+    public List<ProductResponseDTO> randomProducts() {
+        return productRepository.findRandomProducts() 
+            .stream()
+            .map(this::mapToResponse)
+            .toList();
+    }
+
+    public List<ProductResponseDTO> lastProducts() {
+        return productRepository.findTop10ByOrderByIdDesc() 
+            .stream()
+            .map(this::mapToResponse)
+            .toList();
+    }
+
+    public List<ProductResponseDTO> findProducts() {
+        return productRepository.findAll() 
+            .stream()
+            .map(this::mapToResponse) 
+            .toList();
     }
 
     public ProductResponseDTO findById(Long id){
@@ -59,16 +104,22 @@ public class ProductService {
     }
 
     private ProductResponseDTO mapToResponse(Product product) {
-        return new ProductResponseDTO(
-                product.getId(),
-                product.getTitle(),
-                product.getPrice(),
-                product.getFinalPrice(),
-                product.getDiscountPercent(),
-                product.getStockQuantity(),
-                product.getBrand()
-        );
-    }
+        List<String> imageUrls = product.getImages().stream()
+            .map(ProductImage::getUrl)
+            .toList();
+            
+    return new ProductResponseDTO(
+        product.getId(),
+        product.getTitle(),
+        product.getPrice(),
+        product.getFinalPrice(),
+        product.getDiscountPercent(),
+        product.getStockQuantity(),
+        product.getBrand(),
+        product.getSlug(),
+        imageUrls
+    );
+}
 
     private BigDecimal calculateFinalPrice(BigDecimal price, Integer discount){
         if (discount == null || discount ==0)
@@ -79,12 +130,23 @@ public class ProductService {
         );
     }
 
-    private String generateSlug(String title){
-      String slug = title.toLowerCase().replace("", "-");
-      int i = 1;
-      while (productRepository.existsBySlug(slug)) {
-        slug = slug + "-" + i++;
-      }
-      return slug;
+    private String generateSlug(String title) {
+        String slug = Normalizer.normalize(title, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        slug = pattern.matcher(slug).replaceAll("");
+
+
+        slug = slug.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "") 
+                .replaceAll("\\s+", "-"); 
+
+        String originalSlug = slug;
+        int count = 1;
+        while (productRepository.existsBySlug(slug)) {
+            slug = originalSlug + "-" + count;
+            count++;
+        }
+        
+        return slug;
     }
 }

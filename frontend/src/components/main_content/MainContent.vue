@@ -17,10 +17,9 @@ import '../../style/main_content/mainContent.css'
                 </div>
             </div>
             <div class="container-slider-wrapper">
-                <Slider />
-                <Slider />
-                <Slider />
-                <Slider />
+                <Slider :slider="'recommended'"/>
+                <Slider :slider="'random'"/>
+
             </div>
         </div>
     </main>

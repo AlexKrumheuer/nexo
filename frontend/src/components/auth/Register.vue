@@ -39,7 +39,6 @@
                 email: email.value,
                 password: password.value
             })
-            alert("User created successfully")
             router.push("/login")
         } catch(errorCatch) {
             error.value = "Error when creating user, try again later"

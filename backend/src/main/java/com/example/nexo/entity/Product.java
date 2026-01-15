@@ -7,6 +7,8 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -22,7 +24,8 @@ public class Product {
     private String title;
 
     @Column(unique = true)
-    private String slug;  //url amigavel
+    private String slug;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -47,6 +50,9 @@ public class Product {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductImage> images = new ArrayList<>();
     
     public Product(String title, BigDecimal price, Integer discountPercent, BigDecimal finalPrice, Integer stockQuantity, String brand){
         this.title = title;

@@ -7,11 +7,11 @@ import Dashboard from '../pages/Dashboard.vue'
 import Product from '../pages/Product.vue'
 
 const routes = [
-  { path: '/login', component: Login },
-  { path: '/register', component: Register },
-  { path: '/forgot-password', component: ForgotYourPassword },
+  { path: '/login', component: Login, meta: { hideNavigation: true } },
+  { path: '/register', component: Register, meta: { hideNavigation: true } },
+  { path: '/forgot-password', component: ForgotYourPassword, meta: { hideNavigation: true } },
   { path: '/', name: 'Dashboard', component: Dashboard, meta: {requiresAuth: true}},
-  { path: '/product', name: "Product", component: Product, meta: {requiresAuth: true}}
+  { path: '/product/:slug', name: "Product", component: Product, meta: {requiresAuth: true}}
 ]
 
 const router = createRouter({
