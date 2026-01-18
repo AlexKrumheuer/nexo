@@ -72,7 +72,7 @@ public class ProductService {
 
     public ProductResponseDTO findById(Long id){
         Product product = productRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(()-> new RuntimeException("Product not found"));
 
         return mapToResponse(product);
     }
@@ -80,7 +80,7 @@ public class ProductService {
     public ProductResponseDTO update(Long id, UpdateProductDTO dto){
 
         Product product = productRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(()-> new RuntimeException("Product not found"));
 
         if (dto.title() != null) product.setTitle(dto.title());
         if (dto.description() != null) product.setDescription(dto.description());
@@ -98,7 +98,7 @@ public class ProductService {
     }
     public void delete(Long id) {
         if (!productRepository.existsById(id))
-            throw new RuntimeException("Produto não encontrado");
+            throw new RuntimeException("Product not found");
 
         productRepository.deleteById(id);
     }

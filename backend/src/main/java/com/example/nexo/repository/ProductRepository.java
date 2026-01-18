@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findBySlug(String slug);
     boolean existsBySlug(String Slug);
-    @Query(value = "SELECT * FROM product ORDER BY RAND() LIMIT 10", nativeQuery = true)
+    @Query(value = "SELECT * FROM products ORDER BY RAND() LIMIT 10", nativeQuery = true)
     List<Product> findRandomProducts();
     List<Product> findTop10ByOrderByIdDesc();
 }

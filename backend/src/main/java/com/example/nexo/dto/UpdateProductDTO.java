@@ -9,5 +9,7 @@ public record UpdateProductDTO(
         Integer discountPercent,
         Integer stockQuantity,
         String brand
-) {}
+) {
+     
+}
 
