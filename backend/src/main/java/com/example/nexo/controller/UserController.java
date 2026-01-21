@@ -1,6 +1,5 @@
 package com.example.nexo.controller;
 
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.nexo.service.UserService;

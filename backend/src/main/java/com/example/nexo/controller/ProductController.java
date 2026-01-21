@@ -3,7 +3,6 @@ package com.example.nexo.controller;
 import com.example.nexo.dto.CreateProductDTO;
 import com.example.nexo.dto.ProductResponseDTO;
 import com.example.nexo.dto.UpdateProductDTO;
-import com.example.nexo.entity.Product;
 import com.example.nexo.service.ProductService;
 
 import jakarta.validation.Valid;
