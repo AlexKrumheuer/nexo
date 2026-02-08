@@ -5,7 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import com.example.nexo.dto.UpdateUserDto;
+import com.example.nexo.dto.UserResponseDTO;
 import com.example.nexo.entity.User;
+import com.example.nexo.entity.UserRole;
 import com.example.nexo.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +19,13 @@ public class UserService {
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    public UserResponseDTO turnSeller(User user) {
+        user.setRole(UserRole.SELLER);
+        userRepository.save(user);
+
+        return new UserResponseDTO(user.getUsername(), user.getEmail(), user.getRole());
     }
 
 

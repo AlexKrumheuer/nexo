@@ -38,13 +38,28 @@ public class User implements UserDetails {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.role = UserRole.USER;
     }
 
     // Spring security methods
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if(this.role == UserRole.ADMIN) return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
-        else return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        if (this.role == UserRole.ADMIN) {
+        return List.of(
+            new SimpleGrantedAuthority("ROLE_ADMIN"), 
+            new SimpleGrantedAuthority("ROLE_SELLER"), // Opcional: Se Admin também puder vender
+            new SimpleGrantedAuthority("ROLE_USER")
+        );
+    }
+    
+        if (this.role == UserRole.SELLER) {
+            return List.of(
+                new SimpleGrantedAuthority("ROLE_SELLER"), 
+                new SimpleGrantedAuthority("ROLE_USER")
+            );
+        }
+
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
     @Override
     public String getPassword() {

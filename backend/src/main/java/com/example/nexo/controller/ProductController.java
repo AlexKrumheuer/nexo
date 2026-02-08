@@ -10,12 +10,14 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.GetMapping;
 
 
 @RestController
 @RequestMapping("/api/products")
+@EnableMethodSecurity(securedEnabled = true)
 public class ProductController {
 
     private final ProductService productService;
@@ -23,7 +25,7 @@ public class ProductController {
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
-
+    @PreAuthorize("hasRole('SELLER')")
     @PostMapping
     public ResponseEntity<ProductResponseDTO> create(@RequestBody @Valid CreateProductDTO dto) {
         return ResponseEntity.ok(productService.create(dto));

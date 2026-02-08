@@ -3,6 +3,7 @@ package com.example.nexo.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,8 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.nexo.dto.CreateSellerDTO;
 import com.example.nexo.dto.EditSellerDTO;
+import com.example.nexo.dto.UserResponseDTO;
 import com.example.nexo.entity.Seller;
+import com.example.nexo.entity.User;
 import com.example.nexo.service.SellerService;
+import com.example.nexo.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -26,9 +30,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RequestMapping("/seller")
 public class SellerController {
     private final SellerService sellerService;
+    private final UserService userService;
 
-    public SellerController(SellerService sellerService) {
+    public SellerController(SellerService sellerService, UserService userService) {
         this.sellerService = sellerService;
+        this.userService = userService;
     }
 
     @GetMapping("")
@@ -51,6 +57,17 @@ public class SellerController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @PutMapping("/turn-seller")
+    public ResponseEntity<UserResponseDTO> putMethodName(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        
+        UserResponseDTO returnedUser = userService.turnSeller(user);
+        
+
+        return ResponseEntity.ok(returnedUser);
+    }
+
 
     @PostMapping("")
     public ResponseEntity<Seller> createSeller(@RequestBody @Valid CreateSellerDTO data) {

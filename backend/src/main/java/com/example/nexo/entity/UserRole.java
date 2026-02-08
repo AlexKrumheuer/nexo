@@ -2,6 +2,7 @@ package com.example.nexo.entity;
 
 public enum UserRole {
     ADMIN("ROLE_ADMIN"),
+    SELLER("ROLE_SELLER"),
     USER("ROLE_USER");
 
     private final String role;
