@@ -2,9 +2,11 @@
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../services/api';
+import { useToast } from 'vue-toastification';
 const route = useRoute()
 const product = ref(null)
 const loading = ref(true)
+const toast = useToast()
 
 const formatPrice = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
@@ -32,6 +34,18 @@ onMounted(async () => {
 const setImage = (imgUrl) => {
     currentImage.value = imgUrl;
 }
+
+const addCart = async (productId)=> {
+    try {
+        const body = {productId:productId, quantity:1}
+        await api.post("/api/cart", body)
+        toast.success("Item adicionado com sucesso ao carrinho")
+    } catch(e){
+        console.error("Error: " + e.message || e)
+        toast.error("Erro ao adicionar esse produto ao carrinho, tente novamente")
+    }
+}
+
 </script>
 
 <template>
@@ -105,7 +119,7 @@ const setImage = (imgUrl) => {
             </div>
 
             <button :disabled="product.stockQuantity <= 0" class="btn-buy">Comprar Agora</button>
-            <button :disabled="product.stockQuantity <= 0" class="btn-cart">Adicionar ao Carrinho</button>
+            <button :disabled="product.stockQuantity <= 0" class="btn-cart" @click="addCart(product.id)">Adicionar ao Carrinho</button>
         </div>
     </main>
 
