@@ -11,7 +11,8 @@ const routes = [
   { path: '/register', component: Register, meta: { hideNavigation: true } },
   { path: '/forgot-password', component: ForgotYourPassword, meta: { hideNavigation: true } },
   { path: '/', name: 'Dashboard', component: Dashboard, meta: {requiresAuth: true}},
-  { path: '/product/:slug', name: "Product", component: Product, meta: {requiresAuth: true}}
+  { path: '/product/:slug', name: "Product", component: Product, meta: {requiresAuth: true}},
+  { path: '/cart', name: 'Cart', component: () => import('../pages/Cart.vue'), meta: {requiresAuth: true} },
 ]
 
 const router = createRouter({

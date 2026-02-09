@@ -41,7 +41,10 @@
             </div>
         </div>
         <div class="header-nav">
-            <fa class="header-nav-icon" icon="cart-shopping" />
+            <router-link to="/cart" class="cart">
+                <fa class="header-nav-icon" icon="cart-shopping" />
+            </router-link>
+            
             <div class="wrapper-bell">
                 <fa class="header-nav-icon" icon="bell" />
                 <p class="notification">1</p>
@@ -210,5 +213,9 @@ header {
 .menu-perfil div:hover {
     background-color: #f0f8ff; 
     color: #367cc1; 
+}
+
+.cart {
+    color: #fff;
 }
 </style>
