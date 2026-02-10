@@ -13,6 +13,44 @@ const routes = [
   { path: '/', name: 'Dashboard', component: Dashboard, meta: {requiresAuth: true}},
   { path: '/product/:slug', name: "Product", component: Product, meta: {requiresAuth: true}},
   { path: '/cart', name: 'Cart', component: () => import('../pages/Cart.vue'), meta: {requiresAuth: true} },
+  { 
+    path: '/admin', 
+    name: 'Admin', 
+    component: () => import('../pages/admin/Admin.vue'), 
+    meta: {requiresAuth: true},
+    children: [
+      {
+        path: '', 
+        name: 'AdminDashboard',
+        component: () => import('../pages/admin/Dashboard.vue') 
+      },
+      {
+        path: 'users', 
+        name: 'AdminUsers',
+        component: () => import('../pages/admin/Users.vue')
+      },
+      {
+        path: 'sellers', 
+        name: 'AdminSellers',
+        component: () => import('../pages/admin/Sellers.vue')
+      },
+      {
+        path: 'product-catalog', 
+        name: 'ProductAndCatalog',
+        component: () => import('../pages/admin/ProductAndCatalog.vue')
+      },
+      {
+        path: 'disputes-refunds', 
+        name: 'DisputsAndRefunds',
+        component: () => import('../pages/admin/DisputesAndRefunds.vue')
+      },
+      {
+        path: 'config', 
+        name: 'PlataformConfigs',
+        component: () => import('../pages/admin/PlataformConfig.vue')
+      },
+    ] 
+  },
 ]
 
 const router = createRouter({

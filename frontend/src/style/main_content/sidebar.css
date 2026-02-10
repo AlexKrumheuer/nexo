@@ -13,21 +13,28 @@
     }
 
     .sidebar-item {
-        background-color: #3b7bb9;
-        color: #fff;
-        font-weight: bold;
-        padding: 0.8rem;
-        border-radius: 8px;
-        font-size: 1rem;
-        cursor: pointer;
-        list-style: none;
-        transition: 0.25s;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+       list-style: none;
+        
+        
     }
 
-    .sidebar-item:hover {
+    .sidebar-item__router {
+        background-color: #3b7bb9;
+        font-weight: bold;
+        font-size: 1rem;
+        padding: 0.8rem;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        color: #fff;
+        transition: 0.25s;
+        display: flex;
+        gap: 0.5rem;
+        border: 1px solid transparent;
+        align-items: center;
+    }
+
+    .sidebar-item__router:hover {
         color: #3b7bb9;
         background-color: #fff;
         border: 1px solid #3b7bb9;
