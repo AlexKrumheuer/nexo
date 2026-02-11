@@ -1,5 +1,6 @@
 <script setup>
-import '../../style/admin/users.css'
+import '../../style/admin/admin-global.css'
+import AdminFilter from './product_catalog/AdminFilter.vue'
 </script>
 
 <template>
@@ -17,58 +18,43 @@ import '../../style/admin/users.css'
                     </div>
                     <div class="card-content">
                         <h2 class="stat-value">500.000</h2>
-                        <p class="stat-trend positive">
-                            <fa icon="arrow-up" /> +12% from last month
-                        </p>
+                        <p class="stat-trend positive"><fa icon="arrow-up" /> +12% from last month</p>
                     </div>
                 </div>
-
                 <div class="grid-item card-stats">
                     <div class="card-header">
                         <h2>Active Today</h2>
                     </div>
                     <div class="card-content">
                         <h2 class="stat-value">3.200</h2>
-                        <p class="stat-trend positive">
-                            <fa icon="arrow-up" /> +10% from yesterday
-                        </p>
+                        <p class="stat-trend positive"><fa icon="arrow-up" /> +10% from yesterday</p>
                     </div>
                 </div>
-
                 <div class="grid-item card-stats">
                     <div class="card-header">
                         <h2>Banned Users</h2>
                     </div>
                     <div class="card-content">
                         <h2 class="stat-value">45</h2>
-                        <p class="stat-trend positive">
-                            <fa icon="arrow-up" /> -2% from last month
-                        </p>
+                        <p class="stat-trend negative"><fa icon="arrow-up" /> -2% from last month</p>
                     </div>
                 </div>
             </div>
 
-            <div class="grid-item card-table-container">
+            <div class="card-table-container">
                 <div class="card-header">
                     <h2>User List</h2>
-                    <a href="#" class="view-all">View All</a>
                 </div>
-                <div class="filter-table">
-                    <div class="search-container">
-                        <div class="container-filter-search-icon">
-                            <fa class="filter-search-icon" icon="search"/>
-                        </div>
-                        <input class="filter-input" type="text" placeholder="Search for name...">
-                    </div>
-                    <div class="filter-table-right">
+
+                <AdminFilter placeholder="Search for name..." btnText="Add User">
+                    <template #filters>
                         <select class="filter-select">
                             <option value="">Filter by Role</option>
                             <option value="">Filter by Name</option>
                             <option value="">Filter by Status</option>
                         </select>
-                        <button class="filter-table--add">Add User</button>
-                    </div>
-                </div>
+                    </template>
+                </AdminFilter>
                 
                 <div class="table-wrapper">
                     <table class="admin-table">
@@ -84,54 +70,54 @@ import '../../style/admin/users.css'
                         <tbody>
                             <tr class="table-item">
                                 <td class="id-cell">
-                                    <div class="id-cell__img">
-                                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZsbDUaOj73epjVaDWhej5fPrNuFtfZSz0rw&s" alt="User Avatar">
+                                    <div class="flex-center-cell">
+                                        <div class="id-cell__img">
+                                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZsbDUaOj73epjVaDWhej5fPrNuFtfZSz0rw&s" alt="Avatar">
+                                        </div>
+                                        <p>Lewandowski</p>
                                     </div>
-                                    <p>Lewandowski</p>
                                 </td>
                                 <td>
-                                    <div class="user-cell">
+                                    <div class="flex-center-cell">
                                         <span>lewa@email.com</span>
                                     </div>
                                 </td>
                                 <td><span class="status-badge seller">Seller</span></td>
                                 <td><span class="status-badge success">Active</span></td>
                                 <td class="actions"> 
-                                    <div class="action-btn edit" title="Edit User">
-                                        <fa icon="edit"/>
-                                        <span>edit</span>
+                                    <div class="flex-center-cell">
+                                        <button class="action-btn edit" title="Edit">
+                                            <fa icon="edit"/> <span>edit</span>
+                                        </button>
+                                        <button class="action-btn ban" title="Ban">
+                                            <fa icon="trash"/> <span>ban</span>
+                                        </button>
+                                        <p class="view-details">view details</p>
                                     </div>
-                                    <div class="action-btn ban" title="Ban User">
-                                        <fa icon="trash"/>
-                                        <span>ban</span>
-                                    </div>
-                                    <p class="view-details">view details</p>
                                 </td>
                             </tr>
                             <tr class="table-item">
                                 <td class="id-cell">
-                                    <div class="id-cell__img">
-                                        <div class="avatar-placeholder">JD</div>
+                                    <div class="flex-center-cell">
+                                        <div class="id-cell__img">
+                                            <div class="avatar-placeholder">JD</div>
+                                        </div>
+                                        <p>John Doe</p>
                                     </div>
-                                    <p>John Doe</p>
                                 </td>
                                 <td>
-                                    <div class="user-cell">
+                                    <div class="flex-center-cell">
                                         <span>john.doe@email.com</span>
                                     </div>
                                 </td>
                                 <td><span class="status-badge user">User</span></td>
                                 <td><span class="status-badge pending">Pending</span></td>
                                 <td class="actions"> 
-                                    <div class="action-btn edit">
-                                        <fa icon="edit"/>
-                                        <span>edit</span>
+                                    <div class="flex-center-cell">
+                                        <button class="action-btn edit"><fa icon="edit"/> <span>edit</span></button>
+                                        <button class="action-btn ban"><fa icon="trash"/> <span>ban</span></button>
+                                        <p class="view-details">view details</p>
                                     </div>
-                                    <div class="action-btn ban">
-                                        <fa icon="trash"/>
-                                        <span>ban</span>
-                                    </div>
-                                    <p class="view-details">view details</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -141,98 +127,16 @@ import '../../style/admin/users.css'
         </div>
 
         <div class="pagination-area">
-            <p class="pagination-info">
-                Showing <span class="highlight">1</span> to <span class="highlight">10</span> of <span class="highlight">500</span> results
-            </p>
-            
+            <p class="pagination-info">Showing <span class="highlight">1</span> to <span class="highlight">10</span> of <span class="highlight">500</span> results</p>
             <div class="pagination-controls">
-                <button class="pagination-btn disabled" disabled>
-                    <fa icon="angle-left"></fa>
-                </button>
-
+                <button class="pagination-btn disabled" disabled><fa icon="angle-left"></fa></button>
                 <button class="pagination-btn active">1</button>
                 <button class="pagination-btn">2</button>
                 <button class="pagination-btn">3</button>
-                <button class="pagination-btn">4</button>
                 <span class="pagination-dots">...</span>
                 <button class="pagination-btn">50</button>
-
-                <button class="pagination-btn">
-                    <fa icon="angle-right"></fa>
-                </button>
+                <button class="pagination-btn"><fa icon="angle-right"></fa></button>
             </div>
         </div>
     </section>
 </template>
-
-<style scoped>
-
-
-.search-container {
-    display: grid;
-    grid-template-columns: 15% 85%;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    width: 15rem;
-    border: 1px solid #000;
-    border-radius: 8px;
-}
-
-.filter-table {
-    display: flex;
-    justify-content: space-between;
-    padding: 1rem;
-}
-
-.container-filter-search-icon {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-}
-
-.search-icon {
-    width: 100%;
-    text-align: center;
-    padding-left: 0.5rem;
-}
-
-.filter-input {
-    padding: 0.5rem;
-    border: none;
-    border-radius: 8px;
-}
-
-.filter-input:focus {
-    outline: none;
-}
-
-.filter-table-right {
-    display: flex;
-    gap: 2rem;
-}
-
-.filter-select {
-    padding: 0.5rem;
-    background-color: #fff;
-    border-radius: 8px;
-}
-
-.filter-table--add {
-    padding: 0.5rem 1.5rem;
-    background-color: #0369a1;
-    border: 1px solid transparent;
-    font-weight: bold;
-    color: #fff;
-    border-radius: 8px;
-}
-
-.filter-table--add:hover {
-    cursor: pointer;
-    background-color: #fff;
-    color: #0369a1;
-    border: 1px solid #0369a1;
-}
-</style>
