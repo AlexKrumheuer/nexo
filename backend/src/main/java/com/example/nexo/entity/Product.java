@@ -44,11 +44,13 @@ public class Product {
     private Integer stockQuantity;
 
     @Column(unique = true)
-    private String sku; //código produto
+    private String sku; 
 
     private String brand;
 
+   @Column(name = "created_at", columnDefinition = "TIMESTAMP default current_timestamp")
     private LocalDateTime createdAt;
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP default current_timestamp on")
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
