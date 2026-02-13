@@ -1,14 +1,19 @@
 package com.example.nexo.service;
 
-import com.example.nexo.dto.CategoryResponseDto;
+import com.example.nexo.dto.CategoryResponseDTO;
 import com.example.nexo.dto.CreateCategoryDto;
 import com.example.nexo.dto.UpdateCategoryDto;
 import com.example.nexo.entity.Category;
+import com.example.nexo.infra.exception.CategoryException;
 import com.example.nexo.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -16,22 +21,29 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    public CategoryResponseDto create(CreateCategoryDto dto) {
-        if (categoryRepository.existsBySlug(dto.slug())){
-            throw new RuntimeException("Slug já existe");
+    public CategoryResponseDTO create(CreateCategoryDto dto) {
+        // Verify if this category already exists
+        if (categoryRepository.existsByName(dto.name())){
+            throw new CategoryException("This category already exists", HttpStatus.CONFLICT);
         }
 
         Category parent = null;
         if (dto.parentId() != null){
             parent = categoryRepository.findById(dto.parentId())
-                    .orElseThrow(() -> new RuntimeException("Categoria pai não encontrada"));
+                    .orElseThrow(() -> new CategoryException("This parent category doesn't exists", HttpStatus.NOT_FOUND));
+        }
+        String slug;
+        if(dto.slug() == null || dto.slug().trim().isEmpty()) {
+            slug = generateSlug(dto.name());
+        } else {
+            slug = generateSlug(dto.slug());
         }
 
         Category category = Category.builder()
                 .name(dto.name())
-                .slug(dto.slug())
+                .slug(slug)
                 .parent(parent)
-                .active(dto.active() != null ? dto.active() : true)
+                .active(true)
                 .description(dto.description())
                 .imageUrl(dto.imageUrl())
                 .displayOrder(dto.displayOrder())
@@ -41,34 +53,49 @@ public class CategoryService {
         return toResponse(category);
     }
 
-    public List<CategoryResponseDto> findAll (){
+    public List<CategoryResponseDTO> findAll (){
         return categoryRepository.findAll()
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    public CategoryResponseDto findById(Long id) {
+    public CategoryResponseDTO findById(Long id) {
         return categoryRepository.findById(id)
                 .map(this::toResponse)
-                .orElseThrow(()-> new RuntimeException("Categoria não encontrada"));
+                .orElseThrow(()-> new CategoryException("Category not found", HttpStatus.NOT_FOUND));
 
     }
 
-    public CategoryResponseDto update(Long id, UpdateCategoryDto dto) {
+    public CategoryResponseDTO update(Long id, UpdateCategoryDto dto) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+                .orElseThrow(() -> new CategoryException("Category not found", HttpStatus.NOT_FOUND));
+
+        if (dto.slug() != null && !dto.slug().trim().isEmpty()) {
+            String newSlug = generateSlug(dto.slug());
+            
+            if (!newSlug.equals(category.getSlug())) {
+                if (categoryRepository.existsBySlug(newSlug)) {
+                    throw new CategoryException("Slug already in use", HttpStatus.CONFLICT);
+                }
+                category.setSlug(newSlug);
+            }
+        }
 
         if (dto.name() != null) category.setName(dto.name());
-        if (dto.slug() != null) category.setSlug(dto.slug());
         if (dto.active() != null) category.setActive(dto.active());
         if (dto.description() != null) category.setDescription(dto.description());
         if (dto.imageUrl() != null) category.setImageUrl(dto.imageUrl());
         if (dto.displayOrder() != null) category.setDisplayOrder(dto.displayOrder());
 
         if (dto.parentId() != null){
+
+            if(dto.parentId().equals(id)) {
+               throw new CategoryException("Category cannot be its own parent", HttpStatus.BAD_REQUEST);
+           }
+
            Category parent = categoryRepository.findById(dto.parentId())
-                   .orElseThrow(()-> new RuntimeException("Categoria pai não encontrada"));
+                   .orElseThrow(()-> new CategoryException("Category parent not found", HttpStatus.NOT_FOUND));
            category.setParent(parent);
         }
 
@@ -77,20 +104,54 @@ public class CategoryService {
     }
 
     public void delete(Long id){
+        if (!categoryRepository.existsById(id)) {
+            throw new CategoryException("Category not found", HttpStatus.NOT_FOUND);
+        }
+
+        if (categoryRepository.existsByParentId(id)) {
+            throw new CategoryException("Cannot delete category with sub-categories", HttpStatus.CONFLICT);
+        }
+ 
         categoryRepository.deleteById(id);
     }
 
-    private CategoryResponseDto toResponse(Category category){
-        return  new CategoryResponseDto(
+    private CategoryResponseDTO toResponse(Category category){
+        Long parent = category.getParent() == null ? null : category.getParent().getId();
+        return new CategoryResponseDTO(
                 category.getId(),
                 category.getName(),
                 category.getSlug(),
-                category.getActive(),
                 category.getDescription(),
+                category.getActive(),
                 category.getImageUrl(),
                 category.getDisplayOrder(),
-                category.getParent() != null ? category.getParent().getId() : null
-
+                parent
         );
+    }
+
+    private String generateSlug(String title) {
+
+        if(title == null || title.trim().isEmpty()) {
+            throw new CategoryException("Title for slug is empty", HttpStatus.CONFLICT);
+        }
+
+
+        String slug = Normalizer.normalize(title, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        slug = pattern.matcher(slug).replaceAll("");
+
+
+        slug = slug.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "") 
+                .replaceAll("\\s+", "-"); 
+
+        String originalSlug = slug;
+        int count = 1;
+        while (categoryRepository.existsBySlug(slug)) {
+            slug = originalSlug + "-" + count;
+            count++;
+        }
+        
+        return slug;
     }
 }

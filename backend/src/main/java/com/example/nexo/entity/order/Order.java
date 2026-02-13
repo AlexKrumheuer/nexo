@@ -7,6 +7,7 @@ import java.util.List;
 import com.example.nexo.entity.User;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,6 +16,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -30,9 +32,9 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToMany
+    @ManyToOne
     @JoinColumn(name = "user_id")
-    User user;
+    private User user;
     @Column(nullable = false)
     private BigDecimal totalPrice;
     @Column(nullable = false)
@@ -43,6 +45,7 @@ public class Order {
     @Column(name = "updated_at", columnDefinition = "TIMESTAMP default current_timestamp on")
     private LocalDateTime updatedAt; 
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<OrderItem> orderList;
 

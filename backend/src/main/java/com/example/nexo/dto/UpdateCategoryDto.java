@@ -1,9 +1,8 @@
 package com.example.nexo.dto;
-
 public record UpdateCategoryDto(
         String name,
-        String slug,
         Long parentId,
+        String slug,
         Boolean active,
         String description,
         String imageUrl,

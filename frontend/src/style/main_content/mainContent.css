@@ -2,9 +2,6 @@ main {
     height: auto;
     width: 100%;
     background-color: #e9f3fc;
-    display: grid;
-    grid-template-columns: 15% 80%;
-    gap: 2rem;
 }
 
 .main-content {

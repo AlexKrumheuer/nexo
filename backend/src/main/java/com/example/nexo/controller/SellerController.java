@@ -3,8 +3,8 @@ package com.example.nexo.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
-@CrossOrigin("*")
 @RequestMapping("/seller")
 public class SellerController {
     private final SellerService sellerService;
@@ -70,6 +69,7 @@ public class SellerController {
 
 
     @PostMapping("")
+    @PreAuthorize("hasRole('SELLER')") 
     public ResponseEntity<Seller> createSeller(@RequestBody @Valid CreateSellerDTO data) {
         try {
             Seller sellerSalvar = sellerService.postSeller(data);
@@ -80,12 +80,14 @@ public class SellerController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('SELLER')") 
     public ResponseEntity<Seller> editSeller(@PathVariable Long id, @RequestBody @Valid EditSellerDTO data) {
         Seller seller = sellerService.editSeller(data, id);
         return ResponseEntity.ok(seller);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SELLER')") 
     public ResponseEntity<Void> deleteSeller(@PathVariable Long id) {
         sellerService.deleteSeller(id);
         return ResponseEntity.noContent().build();

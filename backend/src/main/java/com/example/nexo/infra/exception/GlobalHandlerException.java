@@ -42,7 +42,21 @@ public class GlobalHandlerException {
 
         return ResponseEntity.status(ex.getStatus()).body(error);
     }
-    
+
+    // Handle errors related to categories 
+    @ExceptionHandler(CategoryException.class)
+    public ResponseEntity<ApiErrorDTO> handleCategoryException(CategoryException ex, HttpServletRequest request) {
+        
+        ApiErrorDTO error = new ApiErrorDTO(
+            LocalDateTime.now(),
+            ex.getStatus().value(),
+            ex.getStatus().getReasonPhrase(),
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.status(ex.getStatus()).body(error);
+    }
 
     // Handle general Errors
     @ExceptionHandler(Exception.class)

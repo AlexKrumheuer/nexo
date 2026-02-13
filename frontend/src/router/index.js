@@ -5,19 +5,21 @@ import Register from '../components/auth/Register.vue'
 import ForgotYourPassword from '../components/auth/ForgotYourPassword.vue'
 import Dashboard from '../pages/Dashboard.vue'
 import Product from '../pages/Product.vue'
+import Category from '../pages/Category.vue'
 
 const routes = [
-  { path: '/login', component: Login, meta: { hideNavigation: true } },
-  { path: '/register', component: Register, meta: { hideNavigation: true } },
-  { path: '/forgot-password', component: ForgotYourPassword, meta: { hideNavigation: true } },
+  { path: '/login', component: Login, meta: { hideNavigation: true, hideSidebar: true } },
+  { path: '/register', component: Register, meta: { hideNavigation: true, hideSidebar: true } },
+  { path: '/forgot-password', component: ForgotYourPassword, meta: { hideNavigation: true, hideSidebar: true } },
   { path: '/', name: 'Dashboard', component: Dashboard, meta: {requiresAuth: true}},
+  { path: '/categories', name: 'Category', component: Category, meta: { hideNavigation: false}},
   { path: '/product/:slug', name: "Product", component: Product, meta: {requiresAuth: true}},
   { path: '/cart', name: 'Cart', component: () => import('../pages/Cart.vue'), meta: {requiresAuth: true} },
   { 
     path: '/admin', 
     name: 'Admin', 
     component: () => import('../pages/admin/Admin.vue'), 
-    meta: {requiresAuth: true},
+    meta: {requiresAuth: true, hideSidebar: true},
     children: [
       {
         path: '', 

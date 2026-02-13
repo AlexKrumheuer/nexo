@@ -1,6 +1,24 @@
 <script setup>
+import api from '../../../services/api';
 import '../../../style/admin/admin-global.css'
 import AdminFilter from './AdminFilter.vue'
+import {onMounted, ref} from 'vue'
+
+const categoryList = ref([])
+const loading = ref(true)
+
+
+onMounted(async () => {
+    try {
+        const response = await api.get("/api/categories")
+        categoryList.value = response.data
+    } catch(error) {
+        console.error("Error finding categories: " + error.message || error)
+    } finally {
+        loading.value = false
+    }
+
+})
 </script>
 
 <template>
@@ -12,8 +30,9 @@ import AdminFilter from './AdminFilter.vue'
             </select>
         </template>
     </AdminFilter>
+    <p v-if="loading" style="text-align: center;">Loading...</p>
 
-    <div class="table-wrapper">
+    <div v-else class="table-wrapper">
         <table class="admin-table">
             <thead>
                 <tr>
@@ -25,15 +44,15 @@ import AdminFilter from './AdminFilter.vue'
                 </tr>
             </thead>
             <tbody>
-                <tr class="table-item">
+                <tr class="table-item" v-for="category in categoryList" :key="category.id">
                     <td>
                         <div class="flex-center-cell">
-                            <strong>Electronics</strong>
+                            <strong>{{ category.name}}</strong>
                         </div>
                     </td>
-                    <td>Gadgets and devices</td>
+                    <td>{{ category.description }}</td>
                     <td>1,240</td>
-                    <td><span class="status-badge success">Active</span></td>
+                    <td><span class="status-badge success">{{category.active}}</span></td>
                     <td>
                         <div class="flex-center-cell">
                             <button class="action-btn edit">

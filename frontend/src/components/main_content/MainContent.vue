@@ -5,8 +5,6 @@ import Slider from './Slider.vue';
 import '../../style/main_content/mainContent.css'
 </script>
 <template>
-    <main>
-        <Sidebar />
         <div class="main-content">
             <div class="wrapper-activity">
                 <h2>Recent Activity</h2>
@@ -22,5 +20,4 @@ import '../../style/main_content/mainContent.css'
 
             </div>
         </div>
-    </main>
 </template>
