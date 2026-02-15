@@ -3,12 +3,13 @@ import {computed, onMounted, ref} from 'vue'
 import api from '../../services/api'
 import { useToast } from 'vue-toastification'
 import Validator from '../../util/Validator'
+import '../../style/seller/product_new_seller.css'
 
 const toast = useToast()
 const categoryList = ref([])
 const error = ref('')
 
-
+// THIS IS THE OBJECT WITH ALL INPUTS FIELD
 const form = ref({
     title: '',
     description: '',
@@ -21,6 +22,9 @@ const form = ref({
     active: true
 })
 
+// FUNCTION TO CALC FINAL PRICE
+// WITH COMPUTED IF PRICE OR DISCOUNT IS ALTERED
+// THE FUNCTION IS RECALLED AND RECALC FINALPRICE
 const finalPrice = computed(() => {
     const price = parseFloat(form.value.price) || 0
     const discount = parseFloat(form.value.discountPercent) || 0
@@ -38,6 +42,7 @@ onMounted(() => {
     console.log(categoryList.value)
 })
 
+// FUNCTION THAT IS CALLED WHEN USER SUBMIT THE PRODUCT
 const postProduct = async () => {
     if(!productValidation()) return
 
@@ -46,15 +51,20 @@ const postProduct = async () => {
         formData.append('data', JSON.stringify(form.value));
         selectedFiles.value.forEach(f => formData.append('images', f));
         
-        await api.post('/products', formData)
+        await api.post('/api/products', formData,{
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
         
-        toast.success("Produto salvo com sucesso!");
+        toast.success("Product successfully saved!");
     } catch(e) {
         toast.error("Error saving product, try again later")
         console.error("Error saving produc: ", e.message || e)
     }
 }
 
+// FUNCTION TO GET ALL CATEGORIES FROM DB
 const fetchCategories = async () => {
     try {
         const response = await api.get("/api/categories")
@@ -68,6 +78,7 @@ const fetchCategories = async () => {
 const fileInput = ref(null)
 const isDragging = ref(false)
 
+
 const triggerUpload = () => {
     fileInput.value.click()
 }
@@ -77,6 +88,8 @@ const handleFileUpload = (event) => {
     event.target.value = '' 
 }
 
+// THIS FUNCTION IS USED WHEN THE IMAGES ARE SENT USING DRAG
+// IT SAVES THE IMAGES IN A FILE AND THEN CALL PROCESSFILES
 const onDrop = (event) => {
     isDragging.value = false 
     const files = event.dataTransfer.files
@@ -86,6 +99,9 @@ const onDrop = (event) => {
 const selectedFiles = ref([])
 const previewImages = ref([]);
 
+// THIS FUNCTION IS USED TO DEAL WITH IMAGES BEING SELECTED
+// IT ITERATES OVER EVERY IMAGE SENT AND THEN SAVE IN 
+// SELECTEDFILES AND PREVIEWIMAGES
 const  processFiles = (files) => {
     if (!files) return
 
@@ -101,12 +117,15 @@ const  processFiles = (files) => {
     }
 }
 
+// THIS FUNCTION IS USED TO REMOVE SELECTED IMAGES
 const removeImage = (index) => {
     URL.revokeObjectURL(previewImages.value[index].url);
     selectedFiles.value.splice(index, 1)
     previewImages.value.splice(index, 1)
 };
 
+
+// THIS FUNCTION IS USED TO VALIDATE ALL PRODUCT INFO
 const productValidation = () => {
     if(!Validator.textValidator(form.value.title)) {
         toast.error("Product name must not be blank")
@@ -279,304 +298,5 @@ const productValidation = () => {
 </template>
 
 <style scoped>
-.product-form-page {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
 
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.titles {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.back-link {
-    text-decoration: none;
-    color: #64748b;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.back-link:hover {
-    color: #3b82f6;
-}
-
-.page-header h1 {
-    font-size: 1.5rem;
-    color: #1e293b;
-    margin: 0;
-}
-
-.header-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.btn-primary {
-    background-color: #3b82f6;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-primary:hover {
-    background-color: #2563eb;
-}
-
-.btn-secondary {
-    background-color: white;
-    color: #64748b;
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.btn-secondary:hover {
-    background-color: #f1f5f9;
-}
-
-.form-layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-}
-
-.card {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
-    margin-bottom: 20px;
-}
-
-.card h3 {
-    margin: 0 0 20px 0;
-    font-size: 1.1rem;
-    color: #0f172a;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 10px;
-}
-
-.main-column, .side-column {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
-    flex: 1;
-}
-
-.form-row {
-    display: flex;
-    gap: 20px;
-}
-
-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #334155;
-}
-
-input, select, textarea {
-    padding: 10px 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    outline: none;
-    color: #334155;
-    background-color: white;
-    transition: border 0.2s;
-}
-
-input:focus, select:focus, textarea:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-textarea {
-    resize: vertical;
-}
-
-.disabled-input {
-    background-color: #f1f5f9;
-    color: #94a3b8;
-    cursor: not-allowed;
-}
-
-.toggle-group {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 10px;
-}
-
-.help-text {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    margin: 0;
-}
-
-/* Toggle Switch CSS */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 26px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #cbd5e1;
-    transition: .4s;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 20px;
-    width: 20px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .4s;
-}
-
-input:checked + .slider {
-    background-color: #3b82f6;
-}
-
-input:checked + .slider:before {
-    transform: translateX(24px);
-}
-
-.slider.round {
-    border-radius: 34px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
-}
-
-.upload-area {
-    border: 2px dashed #cbd5e1;
-    border-radius: 8px;
-    padding: 30px;
-    text-align: center;
-    cursor: pointer;
-    background-color: #f8fafc;
-    transition: all 0.2s ease-in-out;
-}
-
-.upload-area:hover {
-    border-color: #3b82f6;
-    background-color: #eff6ff;
-}
-
-.upload-area.dragging {
-    border-color: #2563eb;      
-    background-color: #dbeafe;   
-    transform: scale(1.02);    
-    border-style: solid;        
-}
-.upload-icon {
-    font-size: 2rem;
-    color: #94a3b8;
-    margin-bottom: 10px;
-}
-
-.upload-area p {
-    color: #64748b;
-    font-size: 0.9rem;
-    margin: 0;
-}
-
-.image-preview-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.preview-item {
-    position: relative;
-    width: 80px;
-    height: 80px;
-    border-radius: 6px;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
-}
-
-.preview-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.remove-btn {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    background: rgba(0,0,0,0.6);
-    color: white;
-    border: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    font-size: 0.7rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.remove-btn:hover {
-    background: #ef4444;
-}
-
-@media (max-width: 900px) {
-    .form-layout {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-row {
-        flex-direction: column;
-        gap: 0;
-    }
-}
 </style>

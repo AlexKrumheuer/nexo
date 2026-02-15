@@ -50,24 +50,30 @@ public class Product {
     private Integer stockQuantity;
 
     @Column(unique = true)
-    private String sku; 
+    private String sku;
 
     private String brand;
 
-   @Column(name = "created_at", columnDefinition = "TIMESTAMP default current_timestamp")
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP default current_timestamp")
     private LocalDateTime createdAt;
     @Column(name = "updated_at", columnDefinition = "TIMESTAMP default current_timestamp on")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ProductImage> images = new ArrayList<>();
-    
-    public Product(String title, BigDecimal price, Integer discountPercent, BigDecimal finalPrice, Integer stockQuantity, String brand){
+
+    public Product(String title, String slug, Boolean active, Category category, String description, BigDecimal price,
+            Integer discountPercent, BigDecimal finalPrice, Integer stockQuantity, String sku, String brand) {
         this.title = title;
+        this.slug = slug;
+        this.active = active;
+        this.category = category;
+        this.description = description;
         this.price = price;
         this.discountPercent = discountPercent;
         this.finalPrice = finalPrice;
         this.stockQuantity = stockQuantity;
+        this.sku = sku;
         this.brand = brand;
     }
 }

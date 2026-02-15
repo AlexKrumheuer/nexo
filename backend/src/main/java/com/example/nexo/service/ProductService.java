@@ -2,6 +2,7 @@ package com.example.nexo.service;
 
 import com.example.nexo.dto.CategoryResponseDTO;
 import com.example.nexo.dto.CreateProductDTO;
+import com.example.nexo.dto.ProductImageResponseDTO;
 import com.example.nexo.dto.ProductResponseDTO;
 import com.example.nexo.dto.UpdateProductDTO;
 import com.example.nexo.entity.Category;
@@ -11,7 +12,6 @@ import com.example.nexo.infra.exception.ProductException;
 import com.example.nexo.repository.CategoryRepository;
 import com.example.nexo.repository.ProductImageRepository;
 import com.example.nexo.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,36 +51,54 @@ public class ProductService {
         return mapToResponse(product);  
     }
 
+
+    // RESPONSIBLE FOR PRODUCT POS
+    // IT SHOULD RECEIVE A DTO AND THE IMAGES OF THE PRODUCT
     @Transactional
-    public Product createProductWithImages (CreateProductDTO dto, List<MultipartFile> files){
+    public ProductResponseDTO createProductWithImages (CreateProductDTO dto, List<MultipartFile> files){
+        // FIRST GENERATE THE SLUG
         String slug = generateSlug(dto.title());
 
         Category category = null;
 
+
+        // IT VERIFIES IF THE CATEGORY SENT EXISTS IN DATABASE
         if(dto.categoryId() != null) {
             category = categoryRepository.findById(dto.categoryId())
                 .orElseThrow(() -> new ProductException("Category not found", HttpStatus.NOT_FOUND));
         }
 
-        Product product = new Product();
-        product.setTitle(dto.title());
-        product.setPrice(dto.price());
-        product.setDescription(dto.description());
-        product.setDiscountPercent(dto.discountPercent());
-        product.setFinalPrice(dto.finalPrice());
-        product.setStockQuantity(dto.stockQuantity());
-        product.setBrand(dto.brand());
-        product.setSlug(slug);
-        product.setCategory(category);
-        product.setActive(true);
-        product.setFinalPrice(calculateFinalPrice(dto.price(), dto.discountPercent()));
+        // IT CALCULATES THE FINAL PRICE (PRICE AFTER DISCOUNTS)
+        BigDecimal finalPrice = calculateFinalPrice(dto.price(), dto.discountPercent());
 
+        Product product = new Product(
+            dto.title(), 
+            slug, 
+            dto.active(), 
+            category,
+            dto.description(),
+            dto.price(),
+            dto.discountPercent(),
+            finalPrice,
+            dto.stockQuantity(),
+            dto.sku(),
+            dto.brand()
+        );
+
+        // SAVE THE PRODUCT FIRST, BECAUSE ITS ID IS NEEDED TO CREATE A RELATIONSHIP WITH PRODUCT IMAGES
+        // DUE TO FOREIGN KEY
         Product savedProduct = productRepository.save(product);
 
+
+        // IT VERIFIES IF WAS ACTUALLY SENT A IMAGE
         if (files != null && !files.isEmpty()) {
             List<ProductImage> images = new ArrayList<ProductImage>();
+
+            // FOREACH FILE SENT, THE FILE IS SAVED IN CLOUDINARY DATABASE
+            // THEN CLOUDINARY RETURNS A UNIQUE IDENTIFIER FOR EACH IMAGE
+            // THAT IT WILL BE SAVED IN PRODUCT
             for(MultipartFile file : files) {
-            String imageUrl = imageService.uploadImage(file);
+                String imageUrl = imageService.uploadImage(file);
                 ProductImage image = ProductImage.builder()
                             .url(imageUrl)
                             .product(savedProduct)
@@ -91,7 +109,7 @@ public class ProductService {
             savedProduct.setImages(images);
         }
 
-        return savedProduct;
+        return mapToResponse(savedProduct);
     }
 
 
@@ -168,10 +186,15 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
+
+    // THIS METHOD IS RESPONSIBLE FOR CREATING A RESPONSE PRODUCT
+    // TO FRONTEND
     private ProductResponseDTO mapToResponse(Product product) {
-        List<String> imageUrls = product.getImages() != null
-            ? product.getImages().stream().map(ProductImage::getUrl).toList()
-            : Collections.emptyList();
+        List<ProductImageResponseDTO> imageDtos = product.getImages() != null
+        ? product.getImages().stream()
+            .map(img -> new ProductImageResponseDTO(img.getId(), img.getUrl()))
+            .toList()
+        : Collections.emptyList();
 
         CategoryResponseDTO categoryDto = null;
         if (product.getCategory() != null) {
@@ -192,13 +215,17 @@ public class ProductService {
             product.getTitle(),
             product.getPrice(),
             product.getFinalPrice(),
+            product.getDescription(),
             product.getDiscountPercent(),
             product.getStockQuantity(),
             product.getBrand(),
             product.getActive(),
             categoryDto,
             product.getSlug(),
-            imageUrls
+            product.getSku(),
+            product.getCreatedAt(),
+            product.getUpdatedAt(),
+            imageDtos
         );
 }
 

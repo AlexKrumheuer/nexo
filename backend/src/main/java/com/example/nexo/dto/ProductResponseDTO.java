@@ -1,6 +1,7 @@
 package com.example.nexo.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record ProductResponseDTO(
@@ -8,11 +9,16 @@ public record ProductResponseDTO(
         String title,
         BigDecimal price,
         BigDecimal finalPrice,
+        String description,
         Integer discountPercent,
         Integer stockQuantity,
         String brand,
         Boolean active,
         CategoryResponseDTO category,
         String slug,
-        List<String> images
+        String sku,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        List<ProductImageResponseDTO> images
 ) {}
+

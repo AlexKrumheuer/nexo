@@ -3,7 +3,6 @@ package com.example.nexo.controller;
 import com.example.nexo.dto.CreateProductDTO;
 import com.example.nexo.dto.ProductResponseDTO;
 import com.example.nexo.dto.UpdateProductDTO;
-import com.example.nexo.entity.Product;
 import com.example.nexo.service.ProductService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,14 +36,14 @@ public class ProductController {
     }
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> create(
+    public ResponseEntity<ProductResponseDTO> create(
             @RequestPart("data") String productDataJson,
             @RequestPart(value="images", required=false) List<MultipartFile> images
         ) throws JsonProcessingException {
             ObjectMapper mapper = new ObjectMapper();
             CreateProductDTO dto = mapper.readValue(productDataJson, CreateProductDTO.class);
 
-            Product createdProduct = productService.createProductWithImages(dto, images);
+            ProductResponseDTO createdProduct = productService.createProductWithImages(dto, images);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);    
     }
 
