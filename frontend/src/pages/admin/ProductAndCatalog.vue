@@ -82,24 +82,6 @@ const controlPage = ref('catalog')
             </div>
         </div>
 
-        <div class="pagination-area">
-            <p class="pagination-info">
-                Showing <span class="highlight">1</span> to <span class="highlight">10</span> of <span class="highlight">500</span> results
-            </p>
-            
-            <div class="pagination-controls">
-                <button class="pagination-btn disabled" disabled>
-                    <fa icon="angle-left"></fa>
-                </button>
-                <button class="pagination-btn active">1</button>
-                <button class="pagination-btn">2</button>
-                <button class="pagination-btn">3</button>
-                <span class="pagination-dots">...</span>
-                <button class="pagination-btn">50</button>
-                <button class="pagination-btn">
-                    <fa icon="angle-right"></fa>
-                </button>
-            </div>
-        </div>
+        
     </section>
 </template>

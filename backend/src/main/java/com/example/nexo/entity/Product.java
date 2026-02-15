@@ -26,6 +26,12 @@ public class Product {
     @Column(unique = true)
     private String slug;
 
+    private Boolean active = true;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

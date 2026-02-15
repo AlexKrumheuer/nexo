@@ -27,8 +27,8 @@ const categoryTree = computed(() => {
 
 onMounted(async () => {
     try {
-        const response = await api.get('/api/categories');
-        categories.value = response.data.filter(c => c.active)
+        const response = await api.get('/api/categories?size=1000');
+        categories.value = response.data.content.filter(c => c.active)
     } catch (error) {
         console.error("Error loading categories", error.message || error)
     } finally {

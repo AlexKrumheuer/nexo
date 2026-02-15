@@ -35,11 +35,9 @@ const getLatestProducts = async () => {
 
 const getListProducts = async () => {
     try {
-        const response = await api.get("/api/products")
-        listProducts.value = response.data
-        for(product in listProducts.value) {
-            console.log(product)
-        }
+        const response = await api.get("/api/products?page=0&size=10")
+        listProducts.value = response.data.content
+
     } catch(e) {
         console.error("Error getting products: ", e)
     }
@@ -95,13 +93,22 @@ const scrollLeft = () => {
                     :to="{ name: 'Product', params: { slug: itemRandom.slug } }" 
                     v-for="itemRandom in listLatest" 
                     :key="itemRandom.id" 
-                    v-else="">
+                    v-else-if="slider== 'random'">
                     <SliderItemCard 
-                        
+                        :key="itemRandom.id"
                         :product="itemRandom" 
                     />
                 </router-link>
-                
+                <router-link 
+                    :to="{ name: 'Product', params: { slug: product.slug } }" 
+                    v-for="product in listProducts" 
+                    :key="product.id" 
+                    v-else="">
+                    <SliderItemCard 
+                        :key=product.id
+                        :product="product" 
+                    />
+                </router-link>
 
             </div>
             <button @click="scrollRight" class="nav-btn next">

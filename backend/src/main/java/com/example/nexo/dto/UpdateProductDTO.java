@@ -8,6 +8,8 @@ public record UpdateProductDTO(
         BigDecimal price,
         Integer discountPercent,
         Integer stockQuantity,
+        Boolean active,
+        Long categoryId,
         String brand
 ) {
      

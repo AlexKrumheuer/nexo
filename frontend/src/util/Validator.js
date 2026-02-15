@@ -22,4 +22,14 @@ export default class Validator {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*^#()[\]{}|\\/+_.:;=~])[^\s<>]{8,}$/
         return regex.test(password)
     }
+
+    static price(price) {
+        if(price < 0 || price === null || price === undefined) return false
+        return true
+    }
+
+    static description(desc) {
+        if(desc.trim().length < 30) return false
+        return true
+    }
 }

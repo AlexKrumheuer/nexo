@@ -8,8 +8,11 @@ import com.example.nexo.infra.exception.CategoryException;
 import com.example.nexo.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
 import java.util.List;
@@ -53,11 +56,10 @@ public class CategoryService {
         return toResponse(category);
     }
 
-    public List<CategoryResponseDTO> findAll (){
-        return categoryRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    @Transactional(readOnly = true)
+    public Page<CategoryResponseDTO> findAll (Pageable pageable){
+        return categoryRepository.findAll(pageable)
+                .map(this::toResponse);
     }
 
     public CategoryResponseDTO findById(Long id) {

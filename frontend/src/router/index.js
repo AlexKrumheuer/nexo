@@ -52,6 +52,43 @@ const routes = [
         component: () => import('../pages/admin/PlataformConfig.vue')
       },
     ] 
+  },{ 
+    path: '/seller', 
+    name: 'Seller', 
+    component: () => import('../pages/seller/Seller.vue'), 
+    meta: {requiresAuth: true, hideSidebar: true},
+    children: [
+      {
+        path: '', 
+        name: 'SellerDashboard',
+        component: () => import('../pages/seller/SellerDashboard.vue') 
+      },
+      {
+        path: 'product', 
+        name: 'SellerProduct',
+        component: () => import('../pages/seller/SellerProduct.vue')
+      },
+      {
+        path: 'product/new', 
+        name: 'SellerNewProduct',
+        component: () => import('../pages/seller/ProductNewSeller.vue')
+      },
+      {
+        path: 'order', 
+        name: 'SellerOrder',
+        component: () => import('../pages/seller/SellerOrder.vue')
+      },
+      {
+        path: 'financial', 
+        name: 'SellerFinancial',
+        component: () => import('../pages/seller/SellerFinancial.vue')
+      },
+      {
+        path: 'configuration', 
+        name: 'SellerConfiguration',
+        component: () => import('../pages/seller/SellerConfiguration.vue')
+      },
+    ] 
   },
 ]
 

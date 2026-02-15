@@ -3,7 +3,6 @@ package com.example.nexo.dto;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public record CreateProductDTO(
         @NotBlank (message = "Título Obrigatório")
@@ -24,11 +23,14 @@ public record CreateProductDTO(
         BigDecimal finalPrice,
 
         Integer stockQuantity,
+        @NotNull(message="Category must not be blank")
+        Long categoryId,
 
         @NotBlank(message = "A marca é obrigatória")
         @Size(min = 2, max = 80)
         String brand,
-        @NotEmpty(message = "The product must have at least one image")
-        @Size(max = 5, message = "Max o 5 images by product")
-        List<String> images
+        @NotNull(message="Status of product must not be null")
+        boolean active,
+        @NotBlank(message="SKU code must not be blank")
+        String sku
 ) {}

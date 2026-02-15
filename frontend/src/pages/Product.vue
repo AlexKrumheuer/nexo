@@ -19,6 +19,7 @@ onMounted(async () => {
     try {
         const response = await api.get(`/api/products/slug/${slug}`)
         product.value = response.data
+        console.log(product.value)
         if (product.value.images && product.value.images.length > 0) {
             currentImage.value = product.value.images[0]
         } else {
@@ -37,6 +38,7 @@ const setImage = (imgUrl) => {
 
 const addCart = async (productId)=> {
     try {
+        console.log(productId)
         const body = {productId:productId, quantity:1}
         await api.post("/api/cart", body)
         toast.success("Item adicionado com sucesso ao carrinho")

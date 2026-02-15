@@ -3,22 +3,48 @@ import api from '../../../services/api';
 import '../../../style/admin/admin-global.css'
 import AdminFilter from './AdminFilter.vue'
 import {onMounted, ref} from 'vue'
+import Pagination from '../Pagination.vue';
 
 const categoryList = ref([])
 const loading = ref(true)
 
+const currentPage = ref(0)
+const size = ref(10)
+const totalItems = ref(0)
+const totalPages = ref(0)
 
-onMounted(async () => {
+const fetchCategory = async () => {
+    loading.value = true
     try {
-        const response = await api.get("/api/categories")
-        categoryList.value = response.data
+        const response = await api.get(`/api/categories?page=${currentPage.value}&size=${size.value}`)
+        categoryList.value = response.data.content
+
+        totalItems.value = response.data.totalElements
+        totalPages.value = response.data.totalPages
     } catch(error) {
         console.error("Error finding categories: " + error.message || error)
     } finally {
         loading.value = false
     }
+}
 
+
+onMounted(() => {
+    fetchCategory()
 })
+
+const changePage = (newPage) => {
+    currentPage.value = newPage
+    fetchCategory()
+    
+}
+
+const changeSize = (newSize) => {
+    size.value = newSize
+    currentPage.value = 0
+    fetchCategory()
+}
+
 </script>
 
 <template>
@@ -67,4 +93,15 @@ onMounted(async () => {
             </tbody>
         </table>
     </div>
+    <Pagination 
+        v-if="!loading"
+        :page="currentPage"
+        :totalPages="totalPages"
+        :totalItems="totalItems"
+        :size="size"
+        @change-page="changePage"
+        @change-size="changeSize"
+    >
+    </Pagination>
+
 </template>

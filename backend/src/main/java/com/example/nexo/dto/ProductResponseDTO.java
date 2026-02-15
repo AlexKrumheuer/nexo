@@ -11,6 +11,8 @@ public record ProductResponseDTO(
         Integer discountPercent,
         Integer stockQuantity,
         String brand,
+        Boolean active,
+        CategoryResponseDTO category,
         String slug,
         List<String> images
 ) {}

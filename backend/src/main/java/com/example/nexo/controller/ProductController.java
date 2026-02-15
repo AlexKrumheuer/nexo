@@ -3,16 +3,26 @@ package com.example.nexo.controller;
 import com.example.nexo.dto.CreateProductDTO;
 import com.example.nexo.dto.ProductResponseDTO;
 import com.example.nexo.dto.UpdateProductDTO;
+import com.example.nexo.entity.Product;
 import com.example.nexo.service.ProductService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.validation.Valid;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @RestController
@@ -26,9 +36,16 @@ public class ProductController {
         this.productService = productService;
     }
     @PreAuthorize("hasRole('SELLER')")
-    @PostMapping
-    public ResponseEntity<ProductResponseDTO> create(@RequestBody @Valid CreateProductDTO dto) {
-        return ResponseEntity.ok(productService.create(dto));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Product> create(
+            @RequestPart("data") String productDataJson,
+            @RequestPart(value="images", required=false) List<MultipartFile> images
+        ) throws JsonProcessingException {
+            ObjectMapper mapper = new ObjectMapper();
+            CreateProductDTO dto = mapper.readValue(productDataJson, CreateProductDTO.class);
+
+            Product createdProduct = productService.createProductWithImages(dto, images);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);    
     }
 
     @GetMapping("/slug/{slug}")
@@ -38,13 +55,15 @@ public class ProductController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<ProductResponseDTO>> getProducts() {
-        return ResponseEntity.ok(productService.findProducts());
+    public ResponseEntity<Page<ProductResponseDTO>> getProducts(
+        @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(productService.findProducts(pageable));
     }
 
     @GetMapping("/random")
     public ResponseEntity<List<ProductResponseDTO>> getRandomProducts() {
-        return ResponseEntity.ok(productService.findProducts());
+        return ResponseEntity.ok(productService.randomProducts());
     }
 
     @GetMapping("/last")

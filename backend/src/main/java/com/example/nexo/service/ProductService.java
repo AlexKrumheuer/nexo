@@ -1,53 +1,99 @@
 package com.example.nexo.service;
 
+import com.example.nexo.dto.CategoryResponseDTO;
 import com.example.nexo.dto.CreateProductDTO;
 import com.example.nexo.dto.ProductResponseDTO;
 import com.example.nexo.dto.UpdateProductDTO;
+import com.example.nexo.entity.Category;
 import com.example.nexo.entity.Product;
 import com.example.nexo.entity.ProductImage;
+import com.example.nexo.infra.exception.ProductException;
+import com.example.nexo.repository.CategoryRepository;
+import com.example.nexo.repository.ProductImageRepository;
 import com.example.nexo.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
-@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final ProductImageRepository productImageRepository;
+    private final ImageService imageService;
+
+
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductImageRepository productImageRepository, ImageService imageService) {
+        this.productImageRepository = productImageRepository;
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+        this.imageService = imageService;
+    }
 
     public ProductResponseDTO productSlug(String slug) {
         Product product = productRepository.findBySlug(slug)
-            .orElseThrow(() -> new RuntimeException("Product not found"));
+            .orElseThrow(() -> new ProductException("Product not found by slug", HttpStatus.NOT_FOUND));
 
         return mapToResponse(product);  
     }
 
-    public ProductResponseDTO create (CreateProductDTO dto){
+    @Transactional
+    public Product createProductWithImages (CreateProductDTO dto, List<MultipartFile> files){
         String slug = generateSlug(dto.title());
-        Product product = new Product(dto.title(), dto.price(), dto.discountPercent(), dto.finalPrice(), dto.stockQuantity(), dto.brand());
+
+        Category category = null;
+
+        if(dto.categoryId() != null) {
+            category = categoryRepository.findById(dto.categoryId())
+                .orElseThrow(() -> new ProductException("Category not found", HttpStatus.NOT_FOUND));
+        }
+
+        Product product = new Product();
+        product.setTitle(dto.title());
+        product.setPrice(dto.price());
+        product.setDescription(dto.description());
+        product.setDiscountPercent(dto.discountPercent());
+        product.setFinalPrice(dto.finalPrice());
+        product.setStockQuantity(dto.stockQuantity());
+        product.setBrand(dto.brand());
         product.setSlug(slug);
-        if (dto.images() != null && !dto.images().isEmpty()) {
-        List<ProductImage> imageEntities = dto.images().stream()
-            .map(url -> {
-                ProductImage img = new ProductImage();
-                img.setUrl(url);
-                img.setProduct(product);
-                return img;
-            })
-            .toList();
+        product.setCategory(category);
+        product.setActive(true);
+        product.setFinalPrice(calculateFinalPrice(dto.price(), dto.discountPercent()));
 
-        product.setImages(imageEntities);
-    }
-        productRepository.save (product);
+        Product savedProduct = productRepository.save(product);
 
-        return mapToResponse(product);
+        if (files != null && !files.isEmpty()) {
+            List<ProductImage> images = new ArrayList<ProductImage>();
+            for(MultipartFile file : files) {
+            String imageUrl = imageService.uploadImage(file);
+                ProductImage image = ProductImage.builder()
+                            .url(imageUrl)
+                            .product(savedProduct)
+                            .build();
+                images.add(image);
+            }
+            productImageRepository.saveAll(images);
+            savedProduct.setImages(images);
+        }
+
+        return savedProduct;
     }
+
 
     public List<ProductResponseDTO> randomProducts() {
         return productRepository.findRandomProducts() 
@@ -63,24 +109,32 @@ public class ProductService {
             .toList();
     }
 
-    public List<ProductResponseDTO> findProducts() {
-        return productRepository.findAll() 
-            .stream()
-            .map(this::mapToResponse) 
-            .toList();
+    @Transactional(readOnly = true)
+    public Page<ProductResponseDTO> findProducts(Pageable pageable) {
+        return productRepository.findAll(pageable) 
+            .map(this::mapToResponse);
     }
+
+
+
+
 
     public ProductResponseDTO findById(Long id){
         Product product = productRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Product not found"));
+                .orElseThrow(()-> new ProductException("Product not found", HttpStatus.NOT_FOUND));
 
         return mapToResponse(product);
     }
 
+
+
+
+
+    
     public ProductResponseDTO update(Long id, UpdateProductDTO dto){
 
         Product product = productRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Product not found"));
+                .orElseThrow(()-> new ProductException("Product not found", HttpStatus.NOT_FOUND));
 
         if (dto.title() != null) product.setTitle(dto.title());
         if (dto.description() != null) product.setDescription(dto.description());
@@ -88,6 +142,14 @@ public class ProductService {
         if (dto.discountPercent() != null) product.setDiscountPercent(dto.discountPercent());
         if (dto.stockQuantity() != null) product.setStockQuantity(dto.stockQuantity());
         if (dto.brand() != null) product.setBrand(dto.brand());
+        if(dto.active() != null) product.setActive(dto.active());
+
+
+        if (dto.categoryId() != null) {
+             Category category = categoryRepository.findById(dto.categoryId())
+                    .orElseThrow(() -> new ProductException("Category not found", HttpStatus.NOT_FOUND));
+             product.setCategory(category);
+        }
 
         product.setFinalPrice(calculateFinalPrice(product.getPrice(), product.getDiscountPercent()));
         product.setUpdatedAt(LocalDateTime.now());
@@ -96,29 +158,48 @@ public class ProductService {
 
         return mapToResponse(product);
     }
+
+
+
     public void delete(Long id) {
         if (!productRepository.existsById(id))
-            throw new RuntimeException("Product not found");
+            throw new ProductException("Product not found", HttpStatus.NOT_FOUND);
 
         productRepository.deleteById(id);
     }
 
     private ProductResponseDTO mapToResponse(Product product) {
-        List<String> imageUrls = product.getImages().stream()
-            .map(ProductImage::getUrl)
-            .toList();
+        List<String> imageUrls = product.getImages() != null
+            ? product.getImages().stream().map(ProductImage::getUrl).toList()
+            : Collections.emptyList();
+
+        CategoryResponseDTO categoryDto = null;
+        if (product.getCategory() != null) {
+            categoryDto = new CategoryResponseDTO(
+                product.getCategory().getId(),
+                product.getCategory().getName(),
+                product.getCategory().getSlug(),
+                product.getCategory().getDescription(),
+                product.getCategory().getActive(),
+                product.getCategory().getImageUrl(),
+                product.getCategory().getDisplayOrder(),
+                product.getCategory().getParent() != null ? product.getCategory().getParent().getId() : null
+            );
+        }
             
-    return new ProductResponseDTO(
-        product.getId(),
-        product.getTitle(),
-        product.getPrice(),
-        product.getFinalPrice(),
-        product.getDiscountPercent(),
-        product.getStockQuantity(),
-        product.getBrand(),
-        product.getSlug(),
-        imageUrls
-    );
+        return new ProductResponseDTO(
+            product.getId(),
+            product.getTitle(),
+            product.getPrice(),
+            product.getFinalPrice(),
+            product.getDiscountPercent(),
+            product.getStockQuantity(),
+            product.getBrand(),
+            product.getActive(),
+            categoryDto,
+            product.getSlug(),
+            imageUrls
+        );
 }
 
     private BigDecimal calculateFinalPrice(BigDecimal price, Integer discount){
