@@ -1,3 +1,72 @@
+<script setup>
+import Pagination from '../admin/Pagination.vue'
+import {onMounted, ref, watch} from 'vue'
+import { useToast } from 'vue-toastification'
+import api from '../../services/api'
+
+const toast = useToast()
+
+const loading = ref(false)
+const currentPage = ref(0)
+const totalPages = ref(0)
+const totalItems = ref(0)
+const size = ref(30)
+
+const categories = ref([])
+const products = ref([])
+
+const formFilters = ref({
+    categoryId: null,
+    active: null,
+    stock: null,
+})
+
+const searchInput = ref('')
+
+const fetchProducts = async () => {
+    loading.value = true
+    try {
+        const params = {
+            page: currentPage.value,
+            size: size.value,
+            search: searchInput.value,
+            categoryId: formFilters.value.categoryId,
+            active: formFilters.value.active,
+            stock: formFilters.value.stock
+        }
+
+        const response = await api.get("/api/products", {params})
+        products.value = response.data.content
+    } catch(e) {
+        console.error("Error fetching products: " + e.message || e)
+        toast.error("Error fetching products, try realoding the page")
+    } finally {
+        loading.value = false
+    }
+}
+
+const fetchCategories = async () => {
+    try {
+        const response = await api.get('/api/categories?size=1000');
+        categories.value = response.data.content.filter(c => c.active)
+    }catch(e) {
+        console.error("Error getting categories: " + e.message || e)
+        toast.error("Error getting categories, try again later...")
+    }finally {
+        loading.value = true
+    }
+}
+
+onMounted(() => {
+    fetchCategories()
+})
+
+watch(formFilters, ()=> {
+    currentPage.value = 0
+    fetchProducts()
+}, { deep: true })
+
+</script>
 <template>
     <div class="products-page">
         <div class="page-header">
@@ -13,7 +82,30 @@
         <div class="toolbar">
             <div class="search-box">
                 <fa icon="search" class="search-icon-seller" />
-                <input type="text" placeholder="Search for product name..." />
+                <input type="text" placeholder="Search for product name..." v-model="searchInput"/>
+            </div>
+            <div>
+                <select v-model="formFilters.categoryId">
+                    <option :value="null" disabled="true" selected>Select a category to filter</option>
+                    <option :value="category.id" v-for="category in categories" :key="category.id">{{ category.name }}</option>
+                </select>
+            </div>
+            <div>
+                <select v-model="formFilters.active">
+                    <option :value="null" disabled="true" selected>Filter by product status</option>
+                    <option :value="true">Active</option>
+                    <option :value="false">Inactive</option>
+                    <option :value="null">Both</option>
+                </select>
+            </div>
+            <div>
+                <select v-model="formFilters.stock">
+                    <option :value="null" disabled="true" selected>Filter by product stock</option>
+                    <option :value="'IN_STOCK'">In Stock</option>
+                    <option :value="'LOW_STOCK'">Low Stock</option>
+                    <option :value="'OUT_OF_STOCK'">Out of Stock</option>
+                    <option :value="null">All Stock Status</option>
+                </select>
             </div>
         </div>
 
@@ -22,34 +114,44 @@
                 <thead>
                     <tr>
                         <th width="80">Image</th>
-                        <th>Product</th>
-                        <th>Category</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Status</th>
+                        <th>Product <fa icon="angle-down"/></th>
+                        <th>Category <fa icon="angle-down"/></th>
+                        <th>Price <fa icon="angle-down"/></th>
+                        <th>Stock <fa icon="angle-down"/></th>
+                        <th>Status <fa icon="angle-down"/></th>
                         <th width="100">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    <tr v-for="product in products" :key="product.id">
                         <td>
                             <div class="img-wrapper">
-                                <img src="https://placehold.co/50" alt="Prod" />
+                                <img :src="product.images[0].url" alt="Product Image" />
                             </div>
                         </td>
                         <td>
                             <div class="product-info">
-                                <span class="name">Smartphone Galaxy S23</span>
-                                <span class="sku">ID: #1024</span>
+                                <span class="name">{{ product.title }}</span>
+                                <span class="sku">{{ product.sku }}</span>
                             </div>
                         </td>
-                        <td>Eletrônicos</td>
-                        <td class="price">R$ 4.500,00</td>
+                        <td>{{ product.category.name }}</td>
+                        <td class="price">{{product.price}}</td>
                         <td>
-                            <span>45 unid.</span>
+                            <span v-if="product.categoryId === 1 && product.stockQuantity === 1" class="badge-exclusive">
+                                Last Unity
+                            </span>
+
+                            <span v-else-if="product.stockQuantity <= 5" class="low-stock">
+                                {{ product.stockQuantity }} uni. (low)
+                            </span>
+
+                            <span v-else>
+                                {{ product.stockQuantity }} uni.
+                            </span>
                         </td>
                         <td>
-                            <span class="status-badge active">Ativo</span>
+                            <span class="status-badge active">{{product.status}}</span>
                         </td>
                         <td>
                             <div class="actions">
@@ -130,6 +232,16 @@
             </table>
         </div>
     </div>
+    <Pagination 
+        v-if="!loading"
+        :page="currentPage"
+        :totalPages="totalPages"
+        :totalItems="totalItems"
+        :size="size"
+        @change-page="changePage"
+        @change-size="changeSize"
+    >
+    </Pagination>
 </template>
 
 <style scoped>
@@ -236,6 +348,12 @@ th {
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+th:hover {
+    color: #0ea5e9;
 }
 
 td {
@@ -328,5 +446,21 @@ td {
 
 .action-btn.delete:hover {
     background-color: #fecaca;
+}
+
+input, select, textarea {
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    color: #334155;
+    background-color: white;
+    transition: border 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 </style>

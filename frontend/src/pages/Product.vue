@@ -19,9 +19,8 @@ onMounted(async () => {
     try {
         const response = await api.get(`/api/products/slug/${slug}`)
         product.value = response.data
-        console.log(product.value)
         if (product.value.images && product.value.images.length > 0) {
-            currentImage.value = product.value.images[0]
+            currentImage.value = product.value.images[0].url
         } else {
             currentImage.value = '/img/default-product-image.png'
         }
@@ -59,8 +58,8 @@ const addCart = async (productId)=> {
 
         <div class="product-gallery">
             <div class="thumbnail-list">
-                <img v-for="(img, index) in product.images" :key="index" :src="img" class="thumb"
-                    :class="{ 'active': currentImage === img }" @click="setImage(img)" alt="Thumbnail">
+                <img v-for="(img, index) in product.images" :key="index" :src="img.url" class="thumb"
+                    :class="{ 'active': currentImage === img.url }" @click="setImage(img.url)" alt="Thumbnail">
             </div>
             <div class="main-image-wrapper">
                 <img class="main-img" :src="currentImage" :alt="product.title">

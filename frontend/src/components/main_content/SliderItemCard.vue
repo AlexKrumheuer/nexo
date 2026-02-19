@@ -15,7 +15,7 @@
 <template>
     <div class="slideritem-card">
         <div class="image-container">
-            <img class=product-image :src="product.images[0]" alt="">
+            <img class=product-image :src="product.images[0].url" alt="">
         </div>
         <div class="card-info">
             <p class="product-title">{{ product.title }}</p>

@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.nexo.dto.CreateCartItemDTO;
-import com.example.nexo.dto.ResponseCartDTO;
-import com.example.nexo.dto.UpdateCartDTO;
-import com.example.nexo.entity.User;
-import com.example.nexo.service.CartService;
+import com.example.nexo.dto.order.CreateCartItemDTO;
+import com.example.nexo.dto.order.ResponseCartDTO;
+import com.example.nexo.dto.order.UpdateCartDTO;
+import com.example.nexo.entity.user.User;
+import com.example.nexo.service.order.CartService;
 
 import jakarta.validation.Valid;
 

@@ -2,8 +2,8 @@ package com.example.nexo.entity.order;
 
 import java.math.BigDecimal;
 
-import com.example.nexo.entity.Product;
-import com.example.nexo.entity.Seller;
+import com.example.nexo.entity.product.Product;
+import com.example.nexo.entity.user.Seller;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Entity;
@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name="order_item")
+@Table(name="order_items")
 @NoArgsConstructor
 @Setter
 @Getter

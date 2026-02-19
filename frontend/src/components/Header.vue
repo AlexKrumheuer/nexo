@@ -55,7 +55,7 @@
             <p>Alex</p>
             <fa icon="angle-down" />
             <nav v-if="openMenuPerfil" class="menu-perfil">
-                <div>Perfil</div>
+                <router-link to="/me" class="perfil-redirect">Perfil</router-link>
                 <div @click="logout">Log out</div>
             </nav>
         </div>
@@ -198,24 +198,35 @@ header {
     width: 150px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    padding: 0.5rem 0;
+    padding: 0.8rem 0;
     overflow: hidden; 
     z-index: 100; 
 }
 
-.menu-perfil div {
+.menu-perfil div,
+.perfil-redirect {
     padding: 10px 15px;
     cursor: pointer;
     transition: 0.3s;
     font-weight: normal;
 }
 
-.menu-perfil div:hover {
+.perfil-redirect {
+    color: #333333;
+    text-decoration: none;
+}
+
+.menu-perfil div:hover,
+.perfil-redirect:hover {
     background-color: #f0f8ff; 
     color: #367cc1; 
 }
 
 .cart {
     color: #fff;
+}
+
+.perfil-redirect {
+    
 }
 </style>

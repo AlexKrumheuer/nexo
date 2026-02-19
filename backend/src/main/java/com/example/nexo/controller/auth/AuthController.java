@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.nexo.dto.CreateUserDto;
-import com.example.nexo.dto.LoginResponseDTO;
-import com.example.nexo.dto.LoginUserDTO;
-import com.example.nexo.entity.User;
-import com.example.nexo.service.AuthService;
-import com.example.nexo.service.TokenBlacklistService;
+import com.example.nexo.dto.auth.CreateUserDto;
+import com.example.nexo.dto.auth.LoginResponseDTO;
+import com.example.nexo.dto.auth.LoginUserDTO;
+import com.example.nexo.entity.user.User;
+import com.example.nexo.service.user.AuthService;
+import com.example.nexo.service.user.TokenBlacklistService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

@@ -10,7 +10,8 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.example.nexo.entity.Product;
+import com.example.nexo.entity.product.Product;
+import com.example.nexo.repository.product.ProductRepository;
 
 
 @DataJpaTest // It configures H2 & JPA context

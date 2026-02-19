@@ -4,7 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.nexo.entity.User;
+import com.example.nexo.entity.user.Address;
+import com.example.nexo.entity.user.User;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
@@ -18,6 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,11 +37,18 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+    @OneToOne
+    @JoinColumn(name = "address_id")
+    private Address address;
     @Column(nullable = false)
     private BigDecimal totalPrice;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private PaymentType paymentMethod;
+    private String transactionId;
     @Column(name = "created_at", columnDefinition = "TIMESTAMP default current_timestamp")
     private LocalDateTime createdAt;
     @Column(name = "updated_at", columnDefinition = "TIMESTAMP default current_timestamp on")

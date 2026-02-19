@@ -8,9 +8,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.nexo.repository.UserRepository;
-import com.example.nexo.service.TokenBlacklistService;
-import com.example.nexo.service.TokenService;
+import com.example.nexo.repository.user.UserRepository;
+import com.example.nexo.service.user.TokenBlacklistService;
+import com.example.nexo.service.user.TokenService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

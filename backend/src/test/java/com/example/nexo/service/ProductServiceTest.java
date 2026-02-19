@@ -1,11 +1,13 @@
 package com.example.nexo.service;
 
-import com.example.nexo.dto.CreateProductDTO;
-import com.example.nexo.dto.ProductResponseDTO;
-import com.example.nexo.dto.UpdateProductDTO;
-import com.example.nexo.entity.Product;
-import com.example.nexo.entity.ProductImage;
-import com.example.nexo.repository.ProductRepository;
+import com.example.nexo.dto.product.CreateProductDTO;
+import com.example.nexo.dto.product.ProductResponseDTO;
+import com.example.nexo.dto.product.UpdateProductDTO;
+import com.example.nexo.entity.product.Product;
+import com.example.nexo.entity.product.ProductImage;
+import com.example.nexo.repository.product.ProductRepository;
+import com.example.nexo.service.product.ProductService;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

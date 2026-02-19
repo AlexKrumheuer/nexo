@@ -1,10 +1,10 @@
 package com.example.nexo.controller;
 
-import com.example.nexo.dto.UpdateUserDto;
-import com.example.nexo.entity.User;
-
-import com.example.nexo.service.TokenService;
-import com.example.nexo.service.UserService;
+import com.example.nexo.controller.user.UserController;
+import com.example.nexo.dto.auth.UpdateUserDto;
+import com.example.nexo.entity.user.User;
+import com.example.nexo.service.user.TokenService;
+import com.example.nexo.service.user.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;

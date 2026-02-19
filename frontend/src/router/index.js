@@ -16,6 +16,34 @@ const routes = [
   { path: '/product/:slug', name: "Product", component: Product, meta: {requiresAuth: true}},
   { path: '/cart', name: 'Cart', component: () => import('../pages/Cart.vue'), meta: {requiresAuth: true} },
   { 
+    path: '/me', 
+    name: 'User', 
+    component: () => import('../pages/user/User.vue'), 
+    meta: {requiresAuth: true, hideSidebar: true},
+    children: [
+      {
+        path: '', 
+        name: 'PersonalInfo',
+        component: () => import('../pages/user/PersonalInfo.vue') 
+      },
+      {
+        path: 'addresses', 
+        name: 'Addresses',
+        component: () => import('../pages/user/Addresses.vue')
+      },
+      {
+        path: 'payments', 
+        name: 'Payments',
+        component: () => import('../pages/user/Payments.vue')
+      },
+      {
+        path: 'security', 
+        name: 'Security',
+        component: () => import('../pages/user/Security.vue')
+      }
+    ] 
+  },,
+  { 
     path: '/admin', 
     name: 'Admin', 
     component: () => import('../pages/admin/Admin.vue'), 

@@ -1,8 +1,9 @@
 package com.example.nexo.config;
 
-import com.example.nexo.entity.User;
-import com.example.nexo.entity.UserRole;
-import com.example.nexo.repository.UserRepository;
+import com.example.nexo.entity.user.User;
+import com.example.nexo.entity.user.UserRole;
+import com.example.nexo.repository.user.UserRepository;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;

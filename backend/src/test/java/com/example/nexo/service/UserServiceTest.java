@@ -1,8 +1,10 @@
 package com.example.nexo.service;
 
-import com.example.nexo.dto.UpdateUserDto;
-import com.example.nexo.entity.User;
-import com.example.nexo.repository.UserRepository;
+import com.example.nexo.dto.auth.UpdateUserDto;
+import com.example.nexo.entity.user.User;
+import com.example.nexo.repository.user.UserRepository;
+import com.example.nexo.service.user.UserService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
