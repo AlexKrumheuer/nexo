@@ -3,6 +3,8 @@ create table users(
     username varchar(500) not null,
     email varchar(500) not null unique,
     password varchar(500) not null,
+    user_perfil_image varchar(255),
+    user_banner_image varchar(255),
     role varchar(20)
 );
 
@@ -21,18 +23,18 @@ create table addresses(
 );
 
 CREATE TABLE sellers(
-    id bigint primary key auto_increment,
-    user_id bigint not null,
+    id bigint not null primary key,
     store_name varchar(500) not null,
     slug varchar(250) unique not null,
-    cnpj varchar(18) unique,
+    seller_type varchar(2) not  null,
+    `document` varchar(18) unique not null,
     support_phone varchar(20),
     logo_url varchar(255),
     commission_rate decimal(5,2) default 10.00,
     `status` varchar(20) default 'PENDING',
     created_at TIMESTAMP DEFAULT current_timestamp,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_seller_user FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT fk_seller_user FOREIGN KEY (id) REFERENCES users(id)
 );
 
 

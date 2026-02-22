@@ -1,8 +1,23 @@
 <script setup>
     import '../../style/main_content/sidebar.css'
+    import { userUserStore } from '../../services/userStore'
+    import { storeToRefs } from 'pinia'
+import { onMounted } from 'vue'
+
+    const userStore = userUserStore()
+
+
+    const { userData, loading } = storeToRefs(userStore)
+    const { fetchUser } = userStore 
+
+    console.log(userData)
+
+    onMounted(() => {
+        fetchUser()
+    })
 </script>
 <template>
-    <nav class="sidebar">
+    <nav class="sidebar" v-if="!loading">
         <ul class="sidebar-container">
             <li class="sidebar-item">
                 <router-link class="sidebar-item__router" to="/">
@@ -46,13 +61,13 @@
                     <p>Favorites</p>
                 </router-link>
             </li>
-            <li class="sidebar-item">
+            <li class="sidebar-item" v-if="userData?.userRole === 'SELLER' ||userData?.userRole === 'ADMIN'">
                 <router-link class="sidebar-item__router" to="/seller">
                     <fa class="item-icon" icon="signal"/>
                     <p>Seller</p>
                 </router-link>
             </li>
-            <li class="sidebar-item">
+            <li class="sidebar-item" v-if="userData?.userRole === 'ADMIN'">
                 <router-link class="sidebar-item__router" to="/admin">
                     <fa class="item-icon" icon="user-tie"/>
                     <p>Admin Panel</p>

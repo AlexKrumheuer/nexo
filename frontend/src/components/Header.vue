@@ -1,9 +1,16 @@
 
 <script setup>
-    import {ref} from 'vue'
+    import {onMounted, ref} from 'vue'
     import api from '../services/api'
     import {useRouter} from 'vue-router'
+    import { userUserStore } from '../services/userStore'
+    import { storeToRefs } from 'pinia'
 
+    const userStore = userUserStore()
+
+    const { userData, loading } = storeToRefs(userStore)
+
+    const { fetchUser } = userStore 
     const router = useRouter()
 
     const openMenuPerfil = ref(false)
@@ -28,9 +35,13 @@
         }
     }
 
+    onMounted(() => {
+        fetchUser()
+    })
+
 </script>
 <template>
-    <header>
+    <header v-if="!loading">
         <router-link to="/">
             <img class="logo" src="../../img/logo.png" alt="">
         </router-link>
@@ -40,7 +51,7 @@
                 <fa class="search-icon" icon="search" />
             </div>
         </div>
-        <div class="header-nav">
+        <div v-if="!loading" class="header-nav">
             <router-link to="/cart" class="cart">
                 <fa class="header-nav-icon" icon="cart-shopping" />
             </router-link>
@@ -50,13 +61,16 @@
                 <p class="notification">1</p>
             </div>
         </div>
-        <div class="header-user" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
-            <img class="user-icon" src="../../img/default-user-pic.png" alt="">
-            <p>Alex</p>
+        <div  class="header-user" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
+            <img class="user-icon" :src="userData?.perfilUrl || '/img/default-user-pic.png'" alt="">
+            <p>{{userData ? userData.username : 'Log In'}}</p>
             <fa icon="angle-down" />
-            <nav v-if="openMenuPerfil" class="menu-perfil">
+            <nav v-if="openMenuPerfil && userData" class="menu-perfil">
                 <router-link to="/me" class="perfil-redirect">Perfil</router-link>
                 <div @click="logout">Log out</div>
+            </nav>
+            <nav v-else-if="openMenuPerfil && !userData" class="menu-perfil">
+                <router-link to="/login" class="perfil-redirect">Log In</router-link>
             </nav>
         </div>
 
@@ -65,7 +79,7 @@
 <style>
 header {
     display: grid;
-    grid-template-columns: 20% 50% 15% 10%;
+    grid-template-columns: 20% 50% 15% 15%;
     column-gap: 1rem;
     background-color: #367cc1;
     color: #fff;
@@ -187,6 +201,7 @@ header {
 
 .user-icon {
     width: 2.5rem;
+    border-radius: 50%;
 }
 
 .menu-perfil {
@@ -194,7 +209,7 @@ header {
     color: #333333; 
     position: absolute;
     top: 100%;
-    right: -10%;
+    left: 25%;
     width: 150px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

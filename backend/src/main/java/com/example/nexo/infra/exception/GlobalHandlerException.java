@@ -28,6 +28,21 @@ public class GlobalHandlerException {
         return ResponseEntity.status(ex.getStatus()).body(error);
     }
 
+    // Handle  errors related to User
+    @ExceptionHandler(UserException.class)
+    public ResponseEntity<ApiErrorDTO> handleUserException(UserException ex, HttpServletRequest request) {
+        
+        ApiErrorDTO error = new ApiErrorDTO(
+            LocalDateTime.now(),
+            ex.getStatus().value(),
+            ex.getStatus().getReasonPhrase(),
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.status(ex.getStatus()).body(error);
+    }
+
     // Handle  errors related to Product
     @ExceptionHandler(ProductException.class)
     public ResponseEntity<ApiErrorDTO> handleProductException(ProductException ex, HttpServletRequest request) {

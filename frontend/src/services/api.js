@@ -9,12 +9,17 @@ const api = axios.create({
     }
 })
 
+const publicRoutes = [
+    '/api/products'
+]
+
 
 // create axios interceptions to look for a token into the localStorage
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token')
 
-    if(token) {
+    const isPublicRoute = publicRoutes.some(route => config.url.includes(route))
+    if(token && !isPublicRoute) {
         config.headers.Authorization = `Bearer ${token}`
     }
 

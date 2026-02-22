@@ -3,13 +3,16 @@ package com.example.nexo.service.user;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.example.nexo.dto.auth.UpdateUserDto;
 import com.example.nexo.dto.auth.UserResponseDTO;
+import com.example.nexo.dto.auth.UserUpdateUsernameDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.entity.user.UserRole;
+import com.example.nexo.infra.exception.UserException;
 import com.example.nexo.repository.user.UserRepository;
+import com.example.nexo.service.ImageService;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,37 +21,61 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ImageService imageService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, ImageService imageService) {
         this.userRepository = userRepository;
+        this.imageService = imageService;
+    }
+
+    public UserResponseDTO getUserInfo(User user) {
+        User actualDataUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new UserException("User not found, invalid JWT Token", HttpStatus.NOT_FOUND));
+        return mapUser(actualDataUser);
     }
 
     public UserResponseDTO turnSeller(User user) {
         user.setRole(UserRole.SELLER);
         userRepository.save(user);
 
-        return new UserResponseDTO(user.getUsername(), user.getEmail(), user.getRole());
+        return mapUser(user);
+    }
+
+    public UserResponseDTO postBannerImage(MultipartFile file, User user) {
+        User actualUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND));
+        String imageUrl = imageService.uploadImage(file);
+        actualUser.setUserBannerImage(imageUrl);
+        User userUpdated = userRepository.save(actualUser);
+
+        return mapUser(userUpdated);
+    }
+
+     public UserResponseDTO postPerfilImage(MultipartFile file, User user) {
+        User actualUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND));
+        String imageUrl = imageService.uploadImage(file);
+        actualUser.setUserPerfilImage(imageUrl);
+        User userUpdated = userRepository.save(actualUser);
+
+        return mapUser(userUpdated);
+    }
+
+    public UserResponseDTO updateUsername(UserUpdateUsernameDTO dto, User user) {
+        User actualUser = userRepository.findById(user.getId())
+                .orElseThrow(()-> new UserException("User not found", HttpStatus.NOT_FOUND));
+        if(actualUser.getUsername() != dto.username()) {
+            actualUser.setUsername(dto.username());
+        } else {
+            throw new UserException("New username is equal to the current one", HttpStatus.CONFLICT);
+        }
+
+        User userUpdated = userRepository.save(actualUser);
+        return mapUser(userUpdated);
     }
 
 
-    public Optional<User> getUserById(Long userId) {
-        return userRepository.findById(userId);
-    }
-
-    public List<User> listUsers() {
-        return userRepository.findAll();
-    }
-
-    public User updateUserById(Long userId, UpdateUserDto updateUserDto) {
-        User user = userRepository.findById(userId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        user.setUsername(updateUserDto.username());
-        user.setPassword(updateUserDto.password());
-        user.setEmail(updateUserDto.email());
-
-        return userRepository.save(user);
-    }
-
-    public void deleteById(Long userId) {
-        userRepository.deleteById(userId);
+    public UserResponseDTO mapUser(User user) {
+        return new UserResponseDTO(user.getUsername(), user.getEmail(), user.getRole(), user.getUserBannerImage(), user.getUserPerfilImage());
     }
 }

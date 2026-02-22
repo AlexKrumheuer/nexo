@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
-@CrossOrigin("*")
 @RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;

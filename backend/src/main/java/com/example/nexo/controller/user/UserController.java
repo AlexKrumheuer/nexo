@@ -1,16 +1,25 @@
 package com.example.nexo.controller.user;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.example.nexo.dto.auth.UpdateUserDto;
+import com.example.nexo.dto.auth.UserResponseDTO;
+import com.example.nexo.dto.auth.UserUpdateUsernameDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.service.user.UserService;
 
-import java.util.List;
+import jakarta.validation.Valid;
+
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+
+
 
 @RestController
-@RequestMapping("/v1/users")
+@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -19,29 +28,33 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<User> getUserById(@PathVariable("userId") Long userId) {
-        return userService.getUserById(userId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getUserInfo(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(userService.getUserInfo(user));
     }
 
-    @GetMapping
-    public ResponseEntity<List<User>> listUsers() {
-        List<User> users = userService.listUsers();
-        return ResponseEntity.ok(users);
+    @PutMapping("/edit-username")
+    public ResponseEntity<UserResponseDTO> putUsername(@RequestBody @Valid UserUpdateUsernameDTO dto, Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(userService.updateUsername(dto, user));
     }
 
-    @PutMapping("/{userId}")
-    public ResponseEntity<User> updateUserById(@PathVariable("userId") Long userId,
-                                               @RequestBody UpdateUserDto updateUserDto) {
-        User user = userService.updateUserById(userId, updateUserDto);
-        return ResponseEntity.ok(user);
+    @PostMapping("/me/banner-image")
+    public ResponseEntity<UserResponseDTO> postBannerImage(
+        @RequestParam("file") MultipartFile file, Authentication auth
+    ) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(userService.postBannerImage(file, user));
     }
 
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable("userId") Long userId) {
-        userService.deleteById(userId);
-        return ResponseEntity.noContent().build();
+    @PostMapping("/me/perfil-image")
+    public ResponseEntity<UserResponseDTO> postPerfilImage(
+        @RequestParam("file") MultipartFile file, Authentication auth
+    ) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(userService.postPerfilImage(file, user));
     }
+    
+
 }

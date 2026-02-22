@@ -11,7 +11,7 @@ const routes = [
   { path: '/login', component: Login, meta: { hideNavigation: true, hideSidebar: true } },
   { path: '/register', component: Register, meta: { hideNavigation: true, hideSidebar: true } },
   { path: '/forgot-password', component: ForgotYourPassword, meta: { hideNavigation: true, hideSidebar: true } },
-  { path: '/', name: 'Dashboard', component: Dashboard, meta: {requiresAuth: true}},
+  { path: '/', name: 'Dashboard', component: Dashboard },
   { path: '/categories', name: 'Category', component: Category, meta: { hideNavigation: false}},
   { path: '/product/:slug', name: "Product", component: Product, meta: {requiresAuth: true}},
   { path: '/cart', name: 'Cart', component: () => import('../pages/Cart.vue'), meta: {requiresAuth: true} },
@@ -19,7 +19,7 @@ const routes = [
     path: '/me', 
     name: 'User', 
     component: () => import('../pages/user/User.vue'), 
-    meta: {requiresAuth: true, hideSidebar: true},
+    meta: {requiresAuth: true, hideSidebar: true, requiredRole: 'USER'},
     children: [
       {
         path: '', 
@@ -47,7 +47,7 @@ const routes = [
     path: '/admin', 
     name: 'Admin', 
     component: () => import('../pages/admin/Admin.vue'), 
-    meta: {requiresAuth: true, hideSidebar: true},
+    meta: {requiresAuth: true, hideSidebar: true, requiredRole: 'ADMIN'},
     children: [
       {
         path: '', 
@@ -84,7 +84,7 @@ const routes = [
     path: '/seller', 
     name: 'Seller', 
     component: () => import('../pages/seller/Seller.vue'), 
-    meta: {requiresAuth: true, hideSidebar: true},
+    meta: {requiresAuth: true, hideSidebar: true, requiredRole: 'SELLER'},
     children: [
       {
         path: '', 

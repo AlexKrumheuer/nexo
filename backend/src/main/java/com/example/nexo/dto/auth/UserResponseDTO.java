@@ -5,7 +5,9 @@ import com.example.nexo.entity.user.UserRole;
 public record UserResponseDTO(
     String username,
     String email,
-    UserRole userRole
+    UserRole userRole,
+    String bannerUrl,
+    String perfilUrl
 ) {
     
 }

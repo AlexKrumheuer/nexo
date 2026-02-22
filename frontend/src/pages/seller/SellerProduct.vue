@@ -165,69 +165,6 @@ watch(formFilters, ()=> {
                         </td>
                     </tr>
 
-                    <tr>
-                        <td>
-                            <div class="img-wrapper">
-                                <img src="https://placehold.co/50" alt="Prod" />
-                            </div>
-                        </td>
-                        <td>
-                            <div class="product-info">
-                                <span class="name">Notebook Gamer Dell</span>
-                                <span class="sku">ID: #1025</span>
-                            </div>
-                        </td>
-                        <td>Informática</td>
-                        <td class="price">R$ 6.200,00</td>
-                        <td>
-                            <span class="low-stock">2 unid.</span>
-                        </td>
-                        <td>
-                            <span class="status-badge active">Ativo</span>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                <button class="action-btn edit">
-                                    <fa icon="pen" />
-                                </button>
-                                <button class="action-btn delete">
-                                    <fa icon="trash" />
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td>
-                            <div class="img-wrapper">
-                                <img src="https://placehold.co/50" alt="Prod" />
-                            </div>
-                        </td>
-                        <td>
-                            <div class="product-info">
-                                <span class="name">Fone Bluetooth JBL</span>
-                                <span class="sku">ID: #1026</span>
-                            </div>
-                        </td>
-                        <td>Acessórios</td>
-                        <td class="price">R$ 250,00</td>
-                        <td>
-                            <span>0 unid.</span>
-                        </td>
-                        <td>
-                            <span class="status-badge inactive">Inativo</span>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                <button class="action-btn edit">
-                                    <fa icon="pen" />
-                                </button>
-                                <button class="action-btn delete">
-                                    <fa icon="trash" />
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
                 </tbody>
             </table>
         </div>

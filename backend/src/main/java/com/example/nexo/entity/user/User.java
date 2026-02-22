@@ -34,6 +34,10 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    private String userPerfilImage;
+
+    private String userBannerImage;
+
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;

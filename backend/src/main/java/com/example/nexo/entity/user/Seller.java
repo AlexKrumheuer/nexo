@@ -17,6 +17,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMax;
@@ -41,9 +42,8 @@ public class Seller {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    @NotNull(message = "Linked user is required")
-    @JsonIgnore
+    @MapsId 
+    @JoinColumn(name = "id") 
     private User user;
 
     @NotBlank(message = "Store name is required")

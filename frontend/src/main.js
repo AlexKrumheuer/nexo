@@ -4,6 +4,8 @@ import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import {library} from '@fortawesome/fontawesome-svg-core'
 import { fas} from '@fortawesome/free-solid-svg-icons'
 
+import { createPinia } from 'pinia'
+
 import App from './App.vue'
 import router from './router'
 import Toast from 'vue-toastification'
@@ -17,6 +19,7 @@ const options = {
 
 createApp(App)
 .component('fa', FontAwesomeIcon)
+.use(createPinia())
 .use(router)
 .use(Toast, options)
 .mount('#app')
