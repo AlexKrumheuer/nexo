@@ -4,41 +4,35 @@ package com.example.nexo.service.user;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.example.nexo.dto.auth.UserResponseDTO;
 import com.example.nexo.dto.auth.UserUpdateUsernameDTO;
+import com.example.nexo.entity.user.Seller;
 import com.example.nexo.entity.user.User;
-import com.example.nexo.entity.user.UserRole;
 import com.example.nexo.infra.exception.UserException;
+import com.example.nexo.repository.user.SellerRepository;
 import com.example.nexo.repository.user.UserRepository;
 import com.example.nexo.service.ImageService;
 
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final ImageService imageService;
+    private final SellerRepository sellerRepository;
 
-    public UserService(UserRepository userRepository, ImageService imageService) {
+    public UserService(UserRepository userRepository, ImageService imageService, SellerRepository sellerRepository) {
         this.userRepository = userRepository;
         this.imageService = imageService;
+        this.sellerRepository = sellerRepository;
     }
 
     public UserResponseDTO getUserInfo(User user) {
         User actualDataUser = userRepository.findById(user.getId())
                 .orElseThrow(() -> new UserException("User not found, invalid JWT Token", HttpStatus.NOT_FOUND));
+
         return mapUser(actualDataUser);
-    }
-
-    public UserResponseDTO turnSeller(User user) {
-        user.setRole(UserRole.SELLER);
-        userRepository.save(user);
-
-        return mapUser(user);
     }
 
     public UserResponseDTO postBannerImage(MultipartFile file, User user) {

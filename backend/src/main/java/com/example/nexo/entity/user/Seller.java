@@ -7,8 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.URL;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,7 +22,6 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,7 +35,6 @@ import lombok.Setter;
 public class Seller {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne
@@ -55,10 +51,14 @@ public class Seller {
     @Column(unique = true, nullable = false)
     private String slug;
 
-    @NotBlank(message = "CNPJ is required")
-    @Pattern(regexp = "^\\d{2}\\.\\d{3}\\.\\d{3}/\\d{4}-\\d{2}$", message = "Invalid CNPJ format. Use XX.XXX.XXX/0001-XX")
     @Column(unique = true)
     private String cnpj;
+
+    @Column(unique = true)
+    private String cpf;
+
+    @Column(nullable = false, length = 2)
+    private String sellerType;
 
     @Size(max = 20)
     private String supportPhone;
@@ -69,7 +69,7 @@ public class Seller {
     @NotNull(message = "Commission rate is required")
     @DecimalMin(value = "0.00", message = "Commission cannot be negative")
     @DecimalMax(value = "100.00", message = "Commission cannot be greater than 100%")
-    private BigDecimal commissionRate;
+    private BigDecimal commissionRate = new BigDecimal("10");
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)

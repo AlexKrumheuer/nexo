@@ -31,6 +31,7 @@
             console.error("Fail when trying to log out")
         } finally{
             localStorage.removeItem("token")
+            userStore.clearUser()
             router.push("/login")
         }
     }
@@ -67,7 +68,7 @@
             <fa icon="angle-down" />
             <nav v-if="openMenuPerfil && userData" class="menu-perfil">
                 <router-link to="/me" class="perfil-redirect">Perfil</router-link>
-                <div @click="logout">Log out</div>
+                <div @click.stop="logout">Log out</div>
             </nav>
             <nav v-else-if="openMenuPerfil && !userData" class="menu-perfil">
                 <router-link to="/login" class="perfil-redirect">Log In</router-link>
@@ -216,6 +217,15 @@ header {
     padding: 0.8rem 0;
     overflow: hidden; 
     z-index: 100; 
+}
+
+.menu-perfil::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 0;
+    width: 100%;
+    height: 20px;
 }
 
 .menu-perfil div,

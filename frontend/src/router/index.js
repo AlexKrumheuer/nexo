@@ -6,6 +6,8 @@ import ForgotYourPassword from '../components/auth/ForgotYourPassword.vue'
 import Dashboard from '../pages/Dashboard.vue'
 import Product from '../pages/Product.vue'
 import Category from '../pages/Category.vue'
+import Cookies from 'js-cookie'
+import { isTokenValid } from '../services/auth'
 
 const routes = [
   { path: '/login', component: Login, meta: { hideNavigation: true, hideSidebar: true } },
@@ -42,7 +44,7 @@ const routes = [
         component: () => import('../pages/user/Security.vue')
       }
     ] 
-  },,
+  },
   { 
     path: '/admin', 
     name: 'Admin', 
@@ -128,11 +130,13 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   
-  const token = localStorage.getItem('token')
+  const token = Cookies.get('token') || localStorage.getItem('token');
 
-  if (requiresAuth && !token) {
+  if (requiresAuth && !isTokenValid(token)) {
+    Cookies.remove('token')
+    localStorage.removeItem('token')
     next('/login')
-  } else if ((to.path === '/login' || to.path === '/register') && token) {
+  } else if ((to.path === '/login' || to.path === '/register') && isTokenValid(token)) {
     next('/') 
   } else {
     next() 

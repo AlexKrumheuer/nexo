@@ -42,6 +42,22 @@ public class GlobalHandlerException {
 
         return ResponseEntity.status(ex.getStatus()).body(error);
     }
+    
+    // HANDLE ERROS RELATED TO SELLER
+    @ExceptionHandler(SellerException.class)
+    public ResponseEntity<ApiErrorDTO> handleSellerException(SellerException ex, HttpServletRequest request) {
+        
+        ApiErrorDTO error = new ApiErrorDTO(
+            LocalDateTime.now(),
+            ex.getStatus().value(),
+            ex.getStatus().getReasonPhrase(),
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity.status(ex.getStatus()).body(error);
+    }
+
 
     // Handle  errors related to Product
     @ExceptionHandler(ProductException.class)

@@ -11,4 +11,6 @@ import com.example.nexo.entity.user.User;
 @Repository
 public interface SellerRepository extends JpaRepository<Seller, Long> {
     Optional<Seller> findSellerByUser(User user); 
+    boolean existsBySlug(String slug);
+
 }
