@@ -17,7 +17,7 @@ const currentImage = ref('')
 onMounted(async () => {
     const slug = route.params.slug
     try {
-        const response = await api.get(`/api/products/slug/${slug}`)
+        const response = await api.get(`/api/products/public/slug/${slug}`)
         product.value = response.data
         if (product.value.images && product.value.images.length > 0) {
             currentImage.value = product.value.images[0].url

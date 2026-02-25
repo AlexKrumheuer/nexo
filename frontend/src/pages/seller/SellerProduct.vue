@@ -35,7 +35,7 @@ const fetchProducts = async () => {
             stock: formFilters.value.stock
         }
 
-        const response = await api.get("/api/products", {params})
+        const response = await api.get("/api/products/seller", {params})
         products.value = response.data.content
     } catch(e) {
         console.error("Error fetching products: " + e.message || e)
@@ -59,6 +59,7 @@ const fetchCategories = async () => {
 
 onMounted(() => {
     fetchCategories()
+    fetchProducts()
 })
 
 watch(formFilters, ()=> {

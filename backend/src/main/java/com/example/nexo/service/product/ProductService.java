@@ -43,7 +43,8 @@ public class ProductService {
     private final SellerRepository sellerRepository;
 
     public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository,
-            ProductImageRepository productImageRepository, ImageService imageService, SellerRepository sellerRepository) {
+            ProductImageRepository productImageRepository, ImageService imageService,
+            SellerRepository sellerRepository) {
         this.productImageRepository = productImageRepository;
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
@@ -66,7 +67,7 @@ public class ProductService {
         String slug = generateSlug(dto.title());
 
         Seller seller = sellerRepository.findSellerByUser(user)
-                        .orElseThrow(()-> new ProductException("The user is not a seller", HttpStatus.FORBIDDEN));
+                .orElseThrow(() -> new ProductException("The user is not a seller", HttpStatus.FORBIDDEN));
 
         Category category = null;
 
@@ -94,11 +95,6 @@ public class ProductService {
                 .seller(seller)
                 .build();
 
-        // SAVE THE PRODUCT FIRST, BECAUSE ITS ID IS NEEDED TO CREATE A RELATIONSHIP
-        // WITH PRODUCT IMAGES
-        // DUE TO FOREIGN KEY
-        Product savedProduct = productRepository.save(product);
-
         // IT VERIFIES IF WAS ACTUALLY SENT A IMAGE
         if (files != null && !files.isEmpty()) {
 
@@ -114,7 +110,7 @@ public class ProductService {
 
                             return ProductImage.builder()
                                     .url(imageUrl)
-                                    .product(savedProduct)
+                                    .product(product)
                                     .build();
                         } catch (Exception e) {
                             throw new ProductException("Error uploading product image", HttpStatus.BAD_REQUEST);
@@ -122,10 +118,46 @@ public class ProductService {
                     })
                     .toList();
 
-            productImageRepository.saveAll(images);
-            savedProduct.setImages(images);
+            product.setImages(images);
         }
+
+        Product savedProduct = productRepository.save(product);
+
         return mapToResponse(savedProduct);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponseDTO> findSellerProducts(
+            String search,
+            Long categoryId,
+            Boolean active,
+            String stockStatus,
+            Pageable pageable,
+            User user) {
+        Seller seller = sellerRepository.findSellerByUser(user)
+                .orElseThrow(() -> new ProductException("This User is not a Seller", HttpStatus.NOT_FOUND));
+
+        Specification<Product> spec = Specification.where(ProductSpecs.belongsToSeller(seller.getId()));
+        // IF FILTERS ARE NOT NULL, THEY ARE ADDED
+        if (search != null && !search.isEmpty()) {
+            spec = spec.and(ProductSpecs.hasNameLike(search));
+        }
+
+        if (categoryId != null) {
+            spec = spec.and(ProductSpecs.hasCategory(categoryId));
+        }
+
+        if (active != null) {
+            spec = spec.and(ProductSpecs.isActive(active));
+        }
+
+        if (stockStatus != null && !stockStatus.isEmpty()) {
+            spec = spec.and(ProductSpecs.hasStockStatus(stockStatus));
+        }
+
+        Page<Product> page = productRepository.findAll(spec, pageable);
+
+        return page.map(this::mapToResponse);
     }
 
     public List<ProductResponseDTO> randomProducts() {

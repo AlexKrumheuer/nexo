@@ -49,7 +49,15 @@ const postProduct = async () => {
     loading.value = true
     try {
         const formData = new FormData();
-        formData.append('data', JSON.stringify(form.value));
+
+        Object.keys(form.value).forEach(key => {
+            if(form.value[key] !== null && form.value[key] !== undefined) {
+                formData.append(key,form.value[key])
+            }
+        })
+
+        console.log(formData.value)
+
         selectedFiles.value.forEach(f => formData.append('images', f));
 
         await api.post('/api/products', formData, {
@@ -165,7 +173,14 @@ const productValidation = () => {
         toast.error("Price must be greater than 0")
         return false
     }
-    if (form.value.stockQuantity === "" || form.value.stockQuantity < 0) {
+    if (form.value.discountPercent === "" || form.value.discountPercent === null) {
+        form.value.discountPercent = 0
+    }
+    if(form.value.discountPercent < 0 || form.value.discountPercent > 100) {
+        toast.error("Discount Percent must not be negative and not greater than 100")
+        return false
+    }
+    if (form.value.stockQuantity === "" || form.value.stockQuantity < 1) {
         toast.error("Invalid stock quantity")
         return false
     }
@@ -193,7 +208,7 @@ const productValidation = () => {
             <div class="header-actions">
                 <button class="btn-secondary" type="button" :disabled="loading">Cancel</button>
                 <button class="btn-primary" @click="postProduct()" :disabled="loading">
-                    <fa icon="spinner" spin v-if="Loading" />
+                    <fa icon="spinner" spin v-if="loading" />
                     <fa icon="save" v-else/> 
                     {{ loading ? 'Saving...' : 'Save Product'}}
                 </button>

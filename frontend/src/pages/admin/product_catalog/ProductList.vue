@@ -21,7 +21,7 @@ const totalPages = ref(0)
 const fetchProductList = async () => {
     loading.value = true
     try {
-        const response = await api.get(`/api/products?page=${currentPage.value}&size=${size.value}`)
+        const response = await api.get(`/api/products/public?page=${currentPage.value}&size=${size.value}`)
         productList.value = response.data.content
 
         totalItems.value = response.data.totalElements

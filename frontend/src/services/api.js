@@ -10,7 +10,7 @@ const api = axios.create({
 })
 
 const publicRoutes = [
-    '/api/products'
+    '/api/products/public'
 ]
 
 
@@ -19,7 +19,6 @@ api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token')
 
     const isPublicRoute = publicRoutes.some(route => config.url.includes(route))
-    console.log("Tem token: " + token ? true : false + "\nToken: " + token)
     if(token && !isPublicRoute) {
         config.headers.Authorization = `Bearer ${token}`
     }

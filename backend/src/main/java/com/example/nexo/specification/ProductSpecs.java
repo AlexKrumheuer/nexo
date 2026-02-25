@@ -46,4 +46,10 @@ public class ProductSpecs {
             return null;
         };
     }
+
+    // 5. FILTER BY SELLER 
+    public static Specification<Product> belongsToSeller(Long sellerId) {
+        return (root, query, builder) ->
+            builder.equal(root.get("seller").get("id"), sellerId);
+    }
 }

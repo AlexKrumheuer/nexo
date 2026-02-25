@@ -92,6 +92,7 @@ public class GlobalHandlerException {
     // Handle general Errors
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorDTO> handleGeneralException(Exception ex, HttpServletRequest request) {
+        ex.printStackTrace();
         ApiErrorDTO error = new ApiErrorDTO(
             LocalDateTime.now(),
             500,

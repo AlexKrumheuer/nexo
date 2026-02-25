@@ -17,7 +17,7 @@ let listRandom = ref([])
 let listLatest = ref([])
 const getRandomProducts = async () => {
     try {
-        const response = await api.get("/api/products/random")
+        const response = await api.get("/api/products/public/random")
         listRandom.value  = response.data
     } catch(e) {
         console.error("Error getting recommended products: ", e)
@@ -26,7 +26,7 @@ const getRandomProducts = async () => {
 
 const getLatestProducts = async () => {
     try {  
-        const response = await api.get("/api/products/last")
+        const response = await api.get("/api/products/public/last")
         listLatest.value = response.data
     } catch(e) {
         console.error("Error getting latest products: ", e)
@@ -35,7 +35,7 @@ const getLatestProducts = async () => {
 
 const getListProducts = async () => {
     try {
-        const response = await api.get("/api/products?page=0&size=10")
+        const response = await api.get("/api/products/public?page=0&size=10")
         listProducts.value = response.data.content
 
     } catch(e) {

@@ -7,7 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.nexo.dto.auth.UserResponseDTO;
 import com.example.nexo.dto.auth.UserUpdateUsernameDTO;
-import com.example.nexo.entity.user.Seller;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.infra.exception.UserException;
 import com.example.nexo.repository.user.SellerRepository;
