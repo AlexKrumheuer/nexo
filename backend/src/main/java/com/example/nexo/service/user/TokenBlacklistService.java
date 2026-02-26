@@ -7,12 +7,12 @@ import org.springframework.stereotype.Service;
 import com.example.nexo.entity.user.TokenBlacklist;
 import com.example.nexo.repository.user.TokenBlacklistRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class TokenBlacklistService {
     private final TokenBlacklistRepository tokenBlacklistRepository;
-    public TokenBlacklistService(TokenBlacklistRepository tokenBlacklistRepository) {
-        this.tokenBlacklistRepository = tokenBlacklistRepository;
-    }
 
     public void addTokenToBlacklist(String token) {
         TokenBlacklist blacklist = new TokenBlacklist();

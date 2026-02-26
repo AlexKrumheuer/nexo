@@ -15,17 +15,17 @@ import com.example.nexo.infra.exception.CartException;
 import com.example.nexo.infra.exception.ProductException;
 import com.example.nexo.repository.order.CartRepository;
 import com.example.nexo.repository.product.ProductRepository;
+import com.example.nexo.util.Mapper;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class CartService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
-    public CartService(CartRepository cartRepository, ProductRepository productRepository) {
-        this.cartRepository = cartRepository;
-        this.productRepository = productRepository;
-    }
+    private final Mapper mapper;
 
     public ResponseCartDTO addToCart(CreateCartItemDTO dto, User user) {
 
@@ -43,16 +43,19 @@ public class CartService {
         newCartItem.setQuantity(dto.quantity());
 
         cartRepository.save(newCartItem);
-        return new ResponseCartDTO(newCartItem.getProduct(), newCartItem.getQuantity());
+
+        return mapper.MapperCartResponse(newCartItem);
     }
 
     public List<ResponseCartDTO> findAllCartItems(User user){
-        List<Cart> cartItems = cartRepository.findAllByUser(user);
+
+        List<Cart> cartItems = cartRepository.findAllByUserId(user.getId());
 
         return cartItems.stream()
-            .map(item -> new ResponseCartDTO(item.getProduct(), item.getQuantity()))
+            .map(item -> mapper.MapperCartResponse(item))
             .toList();
     }
+
     @Transactional
     public ResponseCartDTO editCartItem(UpdateCartDTO dto, User user, Long productId) {
         Product product = productRepository.findById(productId)
@@ -65,7 +68,7 @@ public class CartService {
 
         cartRepository.save(cartToBeUpdated);
 
-        return new ResponseCartDTO(product, cartToBeUpdated.getQuantity());
+        return mapper.MapperCartResponse(cartToBeUpdated);
     }
     
     @Transactional
@@ -87,4 +90,5 @@ public class CartService {
             throw new CartException("Your cart is empty", HttpStatus.BAD_REQUEST);
         }
     }
+
 } 

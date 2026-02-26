@@ -11,20 +11,17 @@ import com.example.nexo.dto.auth.LoginUserDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.repository.user.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.tokenService = tokenService;
-    }
-
+    // METHOD FOR POST HTTP REQUEST
     public User createUser(CreateUserDto createUserDto) {
         String encryptedPassword = passwordEncoder.encode(createUserDto.password());
         User entity = new User(

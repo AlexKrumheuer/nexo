@@ -12,7 +12,7 @@ import com.example.nexo.entity.user.User;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
     Optional<Cart> findByUserAndProduct(User user, Product product);
-    List<Cart> findAllByUser(User user);
+    List<Cart> findAllByUserId(Long userId);
     void deleteAllByUser(User user);
     Boolean existsByUser(User user);
 }

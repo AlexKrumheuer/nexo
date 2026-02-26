@@ -9,29 +9,26 @@ import com.example.nexo.dto.auth.UserResponseDTO;
 import com.example.nexo.dto.auth.UserUpdateUsernameDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.infra.exception.UserException;
-import com.example.nexo.repository.user.SellerRepository;
 import com.example.nexo.repository.user.UserRepository;
 import com.example.nexo.service.ImageService;
+import com.example.nexo.util.Mapper;
+
+import lombok.RequiredArgsConstructor;
 
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final ImageService imageService;
-    private final SellerRepository sellerRepository;
-
-    public UserService(UserRepository userRepository, ImageService imageService, SellerRepository sellerRepository) {
-        this.userRepository = userRepository;
-        this.imageService = imageService;
-        this.sellerRepository = sellerRepository;
-    }
+    private final Mapper mapper;
 
     public UserResponseDTO getUserInfo(User user) {
         User actualDataUser = userRepository.findById(user.getId())
                 .orElseThrow(() -> new UserException("User not found, invalid JWT Token", HttpStatus.NOT_FOUND));
 
-        return mapUser(actualDataUser);
+        return mapper.MapperUserResponse(actualDataUser);
     }
 
     public UserResponseDTO postBannerImage(MultipartFile file, User user) {
@@ -41,7 +38,7 @@ public class UserService {
         actualUser.setUserBannerImage(imageUrl);
         User userUpdated = userRepository.save(actualUser);
 
-        return mapUser(userUpdated);
+        return mapper.MapperUserResponse(userUpdated);
     }
 
      public UserResponseDTO postPerfilImage(MultipartFile file, User user) {
@@ -51,7 +48,7 @@ public class UserService {
         actualUser.setUserPerfilImage(imageUrl);
         User userUpdated = userRepository.save(actualUser);
 
-        return mapUser(userUpdated);
+        return mapper.MapperUserResponse(userUpdated);
     }
 
     public UserResponseDTO updateUsername(UserUpdateUsernameDTO dto, User user) {
@@ -64,11 +61,9 @@ public class UserService {
         }
 
         User userUpdated = userRepository.save(actualUser);
-        return mapUser(userUpdated);
+        return mapper.MapperUserResponse(userUpdated);
     }
 
 
-    public UserResponseDTO mapUser(User user) {
-        return new UserResponseDTO(user.getUsername(), user.getEmail(), user.getRole(), user.getUserBannerImage(), user.getUserPerfilImage());
-    }
+    
 }

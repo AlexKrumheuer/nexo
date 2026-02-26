@@ -1,8 +1,7 @@
 package com.example.nexo.service.user;
 
 import java.math.BigDecimal;
-import java.text.Normalizer;
-import java.util.regex.Pattern;
+
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,25 +18,27 @@ import com.example.nexo.infra.exception.SellerException;
 import com.example.nexo.repository.user.SellerRepository;
 import com.example.nexo.repository.user.UserRepository;
 import com.example.nexo.service.ImageService;
+import com.example.nexo.util.Mapper;
+import com.example.nexo.util.SlugUtil;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+
+
+// Static Methods
+import com.example.nexo.util.SlugUtil;
 
 @Service
+@RequiredArgsConstructor
 public class SellerService {
     private final SellerRepository sellerRepository;
     private final UserRepository userRepository;
     private final ImageService imageService;
-    private final UserService userService;
-    public SellerService(SellerRepository sellerRepository, UserRepository userRepository, ImageService imageService, UserService userService) {
-        this.sellerRepository = sellerRepository;
-        this.userRepository = userRepository;
-        this.imageService = imageService;
-        this.userService = userService;
-    }
+    private final Mapper mapper;
 
     @Transactional
     public SellerResponseDTO createSeller(CreateSellerDTO dto, MultipartFile file, User user) {
-        String slug = generateSellerSlug(dto.storeName());
+        String slug = SlugUtil.generateSlug(dto.storeName(), sellerRepository::existsBySlug);
         User userFound = userRepository.findById(user.getId())
                 .orElseThrow(() -> new SellerException("This user doesn't exists", HttpStatus.NOT_FOUND));
 
@@ -73,42 +74,10 @@ public class SellerService {
         
         sellerRepository.save(sellerSave);
         
-        UserResponseDTO userDTO = userService.mapUser(userFound);
-        return mapSeller(userDTO, sellerSave);
+        UserResponseDTO userDTO = mapper.MapperUserResponse(userFound);
+        return mapper.MapperSellerResponse(userDTO, sellerSave);
 
     }
 
-
-    private String generateSellerSlug(String title) {
-        String slug = Normalizer.normalize(title, Normalizer.Form.NFD);
-        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-        slug = pattern.matcher(slug).replaceAll("");
-
-        slug = slug.toLowerCase()
-                .replaceAll("[^a-z0-9\\s-]", "")
-                .replaceAll("\\s+", "-");
-
-        String originalSlug = slug;
-        int count = 1;
-        while (sellerRepository.existsBySlug(slug)) {
-            slug = originalSlug + "-" + count;
-            count++;
-        }
-
-        return slug;
-    }
-
-    public SellerResponseDTO mapSeller(UserResponseDTO userDTO, Seller seller) {
-        return new SellerResponseDTO(
-            userDTO, 
-            seller.getStoreName(), 
-            seller.getCpf(),
-            seller.getCnpj(), 
-            seller.getSupportPhone(),
-            seller.getStatus(),
-            seller.getSlug(),
-            seller.getLogoUrl(),
-            seller.getCommissionRate()
-        );
-    }
+    
 }

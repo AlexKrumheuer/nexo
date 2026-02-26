@@ -10,13 +10,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ImageService {
     private final Cloudinary cloudinary;
-
-    public ImageService(Cloudinary cloudinary) {
-        this.cloudinary = cloudinary;
-    }
 
     public String uploadImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {

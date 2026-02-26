@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.example.nexo.entity.product.Product;
 import com.example.nexo.entity.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,9 +29,11 @@ public class Cart {
     private Long id;
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
     @ManyToOne
     @JoinColumn(name = "product_id")
+    @JsonIgnore
     private Product product;
     private int quantity;
     @Column(name = "created_at", columnDefinition = "TIMESTAMP default current_timestamp")

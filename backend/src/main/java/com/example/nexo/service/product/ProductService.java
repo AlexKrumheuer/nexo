@@ -1,8 +1,6 @@
 package com.example.nexo.service.product;
 
-import com.example.nexo.dto.product.CategoryResponseDTO;
 import com.example.nexo.dto.product.CreateProductDTO;
-import com.example.nexo.dto.product.ProductImageResponseDTO;
 import com.example.nexo.dto.product.ProductResponseDTO;
 import com.example.nexo.dto.product.UpdateProductDTO;
 import com.example.nexo.entity.product.Category;
@@ -12,11 +10,13 @@ import com.example.nexo.entity.user.Seller;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.infra.exception.ProductException;
 import com.example.nexo.repository.product.CategoryRepository;
-import com.example.nexo.repository.product.ProductImageRepository;
 import com.example.nexo.repository.product.ProductRepository;
 import com.example.nexo.repository.user.SellerRepository;
 import com.example.nexo.service.ImageService;
 import com.example.nexo.specification.ProductSpecs;
+import com.example.nexo.util.Mapper;
+
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,36 +27,29 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.text.Normalizer;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
+
+//Static imports
+import com.example.nexo.util.SlugUtil;
+import com.example.nexo.util.Util;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final ProductImageRepository productImageRepository;
     private final ImageService imageService;
     private final SellerRepository sellerRepository;
+    private final Mapper mapper;
 
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository,
-            ProductImageRepository productImageRepository, ImageService imageService,
-            SellerRepository sellerRepository) {
-        this.productImageRepository = productImageRepository;
-        this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository;
-        this.imageService = imageService;
-        this.sellerRepository = sellerRepository;
-    }
 
     public ProductResponseDTO productSlug(String slug) {
         Product product = productRepository.findBySlug(slug)
                 .orElseThrow(() -> new ProductException("Product not found by slug", HttpStatus.NOT_FOUND));
 
-        return mapToResponse(product);
+        return mapper.MapperProductResponse(product);
     }
 
     // RESPONSIBLE FOR PRODUCT POST
@@ -64,7 +57,8 @@ public class ProductService {
     @Transactional
     public ProductResponseDTO createProductWithImages(CreateProductDTO dto, List<MultipartFile> files, User user) {
         // FIRST GENERATE THE SLUG
-        String slug = generateSlug(dto.title());
+        String slug = SlugUtil.generateSlug(dto.title(), productRepository::existsBySlug);
+
 
         Seller seller = sellerRepository.findSellerByUser(user)
                 .orElseThrow(() -> new ProductException("The user is not a seller", HttpStatus.FORBIDDEN));
@@ -78,7 +72,7 @@ public class ProductService {
         }
 
         // IT CALCULATES THE FINAL PRICE (PRICE AFTER DISCOUNTS)
-        BigDecimal finalPrice = calculateFinalPrice(dto.price(), dto.discountPercent());
+        BigDecimal finalPrice = Util.calculateFinalPrice(dto.price(), dto.discountPercent());
 
         Product product = Product.builder()
                 .title(dto.title())
@@ -123,7 +117,7 @@ public class ProductService {
 
         Product savedProduct = productRepository.save(product);
 
-        return mapToResponse(savedProduct);
+        return mapper.MapperProductResponse(savedProduct);
     }
 
     @Transactional(readOnly = true)
@@ -157,20 +151,20 @@ public class ProductService {
 
         Page<Product> page = productRepository.findAll(spec, pageable);
 
-        return page.map(this::mapToResponse);
+        return page.map(mapper::MapperProductResponse);
     }
 
     public List<ProductResponseDTO> randomProducts() {
         return productRepository.findRandomProducts()
                 .stream()
-                .map(this::mapToResponse)
+                .map(mapper::MapperProductResponse)
                 .toList();
     }
 
     public List<ProductResponseDTO> lastProducts() {
         return productRepository.findTop10ByOrderByIdDesc()
                 .stream()
-                .map(this::mapToResponse)
+                .map(mapper::MapperProductResponse)
                 .toList();
     }
 
@@ -201,14 +195,14 @@ public class ProductService {
 
         Page<Product> page = productRepository.findAll(spec, pageable);
 
-        return page.map(this::mapToResponse);
+        return page.map(mapper::MapperProductResponse);
     }
 
     public ProductResponseDTO findById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException("Product not found", HttpStatus.NOT_FOUND));
 
-        return mapToResponse(product);
+        return mapper.MapperProductResponse(product);
     }
 
     public ProductResponseDTO update(Long id, UpdateProductDTO dto) {
@@ -237,12 +231,12 @@ public class ProductService {
             product.setCategory(category);
         }
 
-        product.setFinalPrice(calculateFinalPrice(product.getPrice(), product.getDiscountPercent()));
+        product.setFinalPrice(Util.calculateFinalPrice(product.getPrice(), product.getDiscountPercent()));
         product.setUpdatedAt(LocalDateTime.now());
 
         productRepository.save(product);
 
-        return mapToResponse(product);
+        return mapper.MapperProductResponse(product);
     }
 
     public void delete(Long id) {
@@ -252,70 +246,5 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    // THIS METHOD IS RESPONSIBLE FOR CREATING A RESPONSE PRODUCT
-    // TO FRONTEND
-    private ProductResponseDTO mapToResponse(Product product) {
-        List<ProductImageResponseDTO> imageDtos = product.getImages() != null
-                ? product.getImages().stream()
-                        .map(img -> new ProductImageResponseDTO(img.getId(), img.getUrl()))
-                        .toList()
-                : Collections.emptyList();
 
-        CategoryResponseDTO categoryDto = null;
-        if (product.getCategory() != null) {
-            categoryDto = new CategoryResponseDTO(
-                    product.getCategory().getId(),
-                    product.getCategory().getName(),
-                    product.getCategory().getSlug(),
-                    product.getCategory().getDescription(),
-                    product.getCategory().getActive(),
-                    product.getCategory().getImageUrl(),
-                    product.getCategory().getDisplayOrder(),
-                    product.getCategory().getParent() != null ? product.getCategory().getParent().getId() : null);
-        }
-
-        return new ProductResponseDTO(
-                product.getId(),
-                product.getTitle(),
-                product.getPrice(),
-                product.getFinalPrice(),
-                product.getDescription(),
-                product.getDiscountPercent(),
-                product.getStockQuantity(),
-                product.getBrand(),
-                product.getActive(),
-                categoryDto,
-                product.getSlug(),
-                product.getSku(),
-                product.getCreatedAt(),
-                product.getUpdatedAt(),
-                imageDtos);
-    }
-
-    private BigDecimal calculateFinalPrice(BigDecimal price, Integer discount) {
-        if (discount == null || discount == 0)
-            return price;
-        return price.subtract(
-                price.multiply(BigDecimal.valueOf(discount))
-                        .divide(BigDecimal.valueOf(100)));
-    }
-
-    private String generateSlug(String title) {
-        String slug = Normalizer.normalize(title, Normalizer.Form.NFD);
-        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-        slug = pattern.matcher(slug).replaceAll("");
-
-        slug = slug.toLowerCase()
-                .replaceAll("[^a-z0-9\\s-]", "")
-                .replaceAll("\\s+", "-");
-
-        String originalSlug = slug;
-        int count = 1;
-        while (productRepository.existsBySlug(slug)) {
-            slug = originalSlug + "-" + count;
-            count++;
-        }
-
-        return slug;
-    }
 }

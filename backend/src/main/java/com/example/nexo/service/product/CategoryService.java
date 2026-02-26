@@ -6,6 +6,8 @@ import com.example.nexo.dto.product.UpdateCategoryDto;
 import com.example.nexo.entity.product.Category;
 import com.example.nexo.infra.exception.CategoryException;
 import com.example.nexo.repository.product.CategoryRepository;
+import com.example.nexo.util.Mapper;
+import com.example.nexo.util.SlugUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,14 +17,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.Normalizer;
-import java.util.regex.Pattern;
-
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final Mapper mapper;
 
     public CategoryResponseDTO create(CreateCategoryDto dto) {
         // Verify if this category already exists
@@ -37,9 +37,9 @@ public class CategoryService {
         }
         String slug;
         if(dto.slug() == null || dto.slug().trim().isEmpty()) {
-            slug = generateSlug(dto.name());
+            slug = SlugUtil.generateSlug(dto.name(), categoryRepository::existsBySlug);
         } else {
-            slug = generateSlug(dto.slug());
+            slug = SlugUtil.generateSlug(dto.slug(), categoryRepository::existsBySlug);
         }
 
         Category category = Category.builder()
@@ -53,18 +53,18 @@ public class CategoryService {
                 .build();
 
         categoryRepository.save(category);
-        return toResponse(category);
+        return mapper.MapperCategoryResponse(category);
     }
 
     @Transactional(readOnly = true)
     public Page<CategoryResponseDTO> findAll (Pageable pageable){
         return categoryRepository.findAll(pageable)
-                .map(this::toResponse);
+                .map(mapper::MapperCategoryResponse);
     }
 
     public CategoryResponseDTO findById(Long id) {
         return categoryRepository.findById(id)
-                .map(this::toResponse)
+                .map(mapper::MapperCategoryResponse)
                 .orElseThrow(()-> new CategoryException("Category not found", HttpStatus.NOT_FOUND));
 
     }
@@ -74,7 +74,7 @@ public class CategoryService {
                 .orElseThrow(() -> new CategoryException("Category not found", HttpStatus.NOT_FOUND));
 
         if (dto.slug() != null && !dto.slug().trim().isEmpty()) {
-            String newSlug = generateSlug(dto.slug());
+            String newSlug = SlugUtil.generateSlug(dto.name(), categoryRepository::existsBySlug);
             
             if (!newSlug.equals(category.getSlug())) {
                 if (categoryRepository.existsBySlug(newSlug)) {
@@ -102,7 +102,7 @@ public class CategoryService {
         }
 
         categoryRepository.save(category);
-        return toResponse(category);
+        return mapper.MapperCategoryResponse(category);
     }
 
     public void delete(Long id){
@@ -117,43 +117,5 @@ public class CategoryService {
         categoryRepository.deleteById(id);
     }
 
-    private CategoryResponseDTO toResponse(Category category){
-        Long parent = category.getParent() == null ? null : category.getParent().getId();
-        return new CategoryResponseDTO(
-                category.getId(),
-                category.getName(),
-                category.getSlug(),
-                category.getDescription(),
-                category.getActive(),
-                category.getImageUrl(),
-                category.getDisplayOrder(),
-                parent
-        );
-    }
-
-    private String generateSlug(String title) {
-
-        if(title == null || title.trim().isEmpty()) {
-            throw new CategoryException("Title for slug is empty", HttpStatus.CONFLICT);
-        }
-
-
-        String slug = Normalizer.normalize(title, Normalizer.Form.NFD);
-        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-        slug = pattern.matcher(slug).replaceAll("");
-
-
-        slug = slug.toLowerCase()
-                .replaceAll("[^a-z0-9\\s-]", "") 
-                .replaceAll("\\s+", "-"); 
-
-        String originalSlug = slug;
-        int count = 1;
-        while (categoryRepository.existsBySlug(slug)) {
-            slug = originalSlug + "-" + count;
-            count++;
-        }
-        
-        return slug;
-    }
+    
 }
