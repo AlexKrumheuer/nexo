@@ -1,4 +1,5 @@
-package com.example.nexo.dto.auth;
+package com.example.nexo.dto.user;
+
 
 import com.example.nexo.entity.user.UserRole;
 

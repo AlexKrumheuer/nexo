@@ -7,9 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.nexo.dto.auth.UserResponseDTO;
 import com.example.nexo.dto.seller.CreateSellerDTO;
 import com.example.nexo.dto.seller.SellerResponseDTO;
+import com.example.nexo.dto.user.UserResponseDTO;
 import com.example.nexo.entity.user.Seller;
 import com.example.nexo.entity.user.SellerStatus;
 import com.example.nexo.entity.user.User;

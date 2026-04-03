@@ -2,7 +2,7 @@ package com.example.nexo.dto.seller;
 
 import java.math.BigDecimal;
 
-import com.example.nexo.dto.auth.UserResponseDTO;
+import com.example.nexo.dto.user.UserResponseDTO;
 import com.example.nexo.entity.user.SellerStatus;
 
 public record SellerResponseDTO(

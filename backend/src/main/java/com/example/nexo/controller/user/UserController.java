@@ -4,18 +4,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.example.nexo.dto.auth.UserResponseDTO;
-import com.example.nexo.dto.auth.UserUpdateUsernameDTO;
+import com.example.nexo.dto.user.UserResponseDTO;
+import com.example.nexo.dto.user.UserUpdateUsernameDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.service.user.UserService;
-
 import jakarta.validation.Valid;
-
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
-
 
 @RestController
 @RequestMapping("/users")
@@ -54,6 +47,6 @@ public class UserController {
         User user = (User) auth.getPrincipal();
         return ResponseEntity.ok(userService.postPerfilImage(file, user));
     }
-    
 
+    
 }

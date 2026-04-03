@@ -3,10 +3,11 @@ package com.example.nexo.service.user;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.nexo.dto.auth.UserResponseDTO;
-import com.example.nexo.dto.auth.UserUpdateUsernameDTO;
+import com.example.nexo.dto.user.UserResponseDTO;
+import com.example.nexo.dto.user.UserUpdateUsernameDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.infra.exception.UserException;
 import com.example.nexo.repository.user.UserRepository;
@@ -24,6 +25,7 @@ public class UserService {
     private final ImageService imageService;
     private final Mapper mapper;
 
+    @Transactional(readOnly = true)
     public UserResponseDTO getUserInfo(User user) {
         User actualDataUser = userRepository.findById(user.getId())
                 .orElseThrow(() -> new UserException("User not found, invalid JWT Token", HttpStatus.NOT_FOUND));

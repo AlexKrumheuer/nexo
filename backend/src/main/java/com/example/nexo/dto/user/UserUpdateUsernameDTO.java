@@ -1,4 +1,4 @@
-package com.example.nexo.dto.auth;
+package com.example.nexo.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
 

@@ -3,22 +3,22 @@ package com.example.nexo.util;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import com.example.nexo.dto.auth.UserResponseDTO;
 import com.example.nexo.dto.order.ResponseCartDTO;
 import com.example.nexo.dto.product.CategoryResponseDTO;
 import com.example.nexo.dto.product.ProductImageResponseDTO;
 import com.example.nexo.dto.product.ProductResponseDTO;
 import com.example.nexo.dto.seller.SellerResponseDTO;
+import com.example.nexo.dto.user.AddressResponseDTO;
+import com.example.nexo.dto.user.UserResponseDTO;
+import com.example.nexo.dto.user.UserResponseDetailedDTO;
 import com.example.nexo.entity.order.Cart;
 import com.example.nexo.entity.product.Category;
 import com.example.nexo.entity.product.Product;
+import com.example.nexo.entity.user.Address;
 import com.example.nexo.entity.user.Seller;
 import com.example.nexo.entity.user.User;
-import com.example.nexo.infra.exception.ProductException;
-import com.example.nexo.repository.product.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,8 +27,6 @@ import lombok.RequiredArgsConstructor;
 public class Mapper {
     // THIS METHOD IS RESPONSIBLE FOR CREATING A RESPONSE PRODUCT
     // TO FRONTEND
-    private final ProductRepository productRepository;
-
     public ProductResponseDTO MapperProductResponse(Product product) {
         List<ProductImageResponseDTO> imageDtos = product.getImages() != null
                 ? product.getImages().stream()
@@ -82,7 +80,29 @@ public class Mapper {
     }
 
     public UserResponseDTO MapperUserResponse(User user) {
-        return new UserResponseDTO(user.getUsername(), user.getEmail(), user.getRole(), user.getUserBannerImage(), user.getUserPerfilImage());
+        
+        return new UserResponseDTO(
+            user.getUsername(), 
+            user.getEmail(), 
+            user.getRole(), 
+            user.getUserBannerImage(), 
+            user.getUserPerfilImage()
+        );
+    }
+
+    public UserResponseDetailedDTO MapperUserDetailedResponse(User user) {
+        List<AddressResponseDTO> addressDtos = user.getAddresses() != null
+            ? user.getAddresses().stream().map(this::MapperAddressResponse).toList()
+            : Collections.emptyList(); 
+        
+        return new UserResponseDetailedDTO(
+            user.getUsername(), 
+            user.getEmail(), 
+            user.getRole(), 
+            user.getUserBannerImage(), 
+            user.getUserPerfilImage(),
+            addressDtos
+        );
     }
 
     public SellerResponseDTO MapperSellerResponse(UserResponseDTO userDTO, Seller seller) {
@@ -100,10 +120,22 @@ public class Mapper {
     }
 
     public ResponseCartDTO MapperCartResponse(Cart cart) {
-        Product product = productRepository.findById(cart.getProduct().getId())
-            .orElseThrow(()-> new ProductException("Product of this cart was not found", HttpStatus.NOT_FOUND));
-        ProductResponseDTO productMapped = this.MapperProductResponse(product);
+
+        ProductResponseDTO productMapped = this.MapperProductResponse(cart.getProduct());
 
         return new ResponseCartDTO(productMapped, cart.getQuantity());
+    }
+
+    public AddressResponseDTO MapperAddressResponse(Address address) {
+        return new AddressResponseDTO(
+            address.getId(),
+            address.getStreet(), 
+            address.getNumber(), 
+            address.getComplement(), 
+            address.getCity(), 
+            address.getState(), 
+            address.getZipCode(), 
+            address.getAddressType()
+        );
     }
 }

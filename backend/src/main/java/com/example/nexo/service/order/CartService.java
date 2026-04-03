@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.nexo.dto.order.CreateCartItemDTO;
 import com.example.nexo.dto.order.ResponseCartDTO;
@@ -17,7 +18,6 @@ import com.example.nexo.repository.order.CartRepository;
 import com.example.nexo.repository.product.ProductRepository;
 import com.example.nexo.util.Mapper;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -47,6 +47,7 @@ public class CartService {
         return mapper.MapperCartResponse(newCartItem);
     }
 
+    @Transactional(readOnly = true)
     public List<ResponseCartDTO> findAllCartItems(User user){
 
         List<Cart> cartItems = cartRepository.findAllByUserId(user.getId());

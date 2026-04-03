@@ -41,6 +41,12 @@ public class User implements UserDetails {
 
     private String userBannerImage;
 
+    @OneToMany(mappedBy = "user")
+    private List<Address> addresses;
+    
+    public void addAddress(Address address) {
+        this.addresses.add(address);
+    }
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
