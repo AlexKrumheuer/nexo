@@ -57,7 +57,7 @@ public class Address {
     @Size(min = 2, max = 2, message = "Use state's abbreviation")
     private String state;
 
-    @NotBlank(message = "O CEP é obrigatório")
+    @NotBlank(message = "CEP is Obligated")
     @Pattern(regexp = "\\d{5}-?\\d{3}", message = "CEP must be in format 00000000 or 00000-000")
     private String zipCode;
 

@@ -17,7 +17,7 @@ create table addresses(
     city varchar(255) not null,
     `state` varchar(2) not null,
     zip_code varchar(20) not null,
-    address_type varchar(20) default "SHIPPING",
+    address_type varchar(20) default "RESIDENCIAL",
     created_at timestamp default current_timestamp,
     constraint fk_address_user foreign key (user_id) references users(id)
 );

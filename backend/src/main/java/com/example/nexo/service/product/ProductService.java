@@ -205,10 +205,17 @@ public class ProductService {
         return mapper.MapperProductResponse(product);
     }
 
-    public ProductResponseDTO update(Long id, UpdateProductDTO dto) {
+    public ProductResponseDTO update(Long id, UpdateProductDTO dto, User user) {
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException("Product not found", HttpStatus.NOT_FOUND));
+
+        Seller seller = sellerRepository.findSellerByUser(user)
+                .orElseThrow(() -> new ProductException("This User is not a Seller", HttpStatus.NOT_FOUND));
+
+        if(!product.getSeller().getId().equals(seller.getId())) {
+            throw new ProductException("You don't have permission to update this product", HttpStatus.FORBIDDEN);
+        }
 
         if (dto.title() != null)
             product.setTitle(dto.title());
@@ -239,9 +246,16 @@ public class ProductService {
         return mapper.MapperProductResponse(product);
     }
 
-    public void delete(Long id) {
-        if (!productRepository.existsById(id))
-            throw new ProductException("Product not found", HttpStatus.NOT_FOUND);
+    public void delete(Long id, User user) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductException("Product not found", HttpStatus.NOT_FOUND));
+
+        Seller seller = sellerRepository.findSellerByUser(user)
+                .orElseThrow(() -> new ProductException("This User is not a Seller", HttpStatus.NOT_FOUND));
+
+        if(!product.getSeller().getId().equals(seller.getId())) {
+            throw new ProductException("You don't have permission to delete this product", HttpStatus.FORBIDDEN);
+        }
 
         productRepository.deleteById(id);
     }

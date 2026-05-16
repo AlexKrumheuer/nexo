@@ -43,9 +43,13 @@ public class SecurityFilter extends OncePerRequestFilter {
             if(email != null && !email.isEmpty()){
                 UserDetails user = userRepository.findByEmail(email);
 
-                var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                if(user != null) {
+                    var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    System.out.println("User not found in database");
+                }
                 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
         

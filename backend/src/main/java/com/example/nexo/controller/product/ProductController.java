@@ -99,14 +99,20 @@ public class ProductController {
     @PutMapping ("/{id}")
     public ResponseEntity<ProductResponseDTO> update(
             @PathVariable Long id,
-            @RequestBody @Valid UpdateProductDTO dto
+            @RequestBody @Valid UpdateProductDTO dto,
+            Authentication auth
             ) {
-        return ResponseEntity.ok(productService.update(id, dto));
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(productService.update(id, dto, user));
     }
 
     @DeleteMapping ("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        productService.delete(id);
+    public ResponseEntity<Void> delete(
+        @PathVariable Long id,
+        Authentication auth
+    ) {
+        User user = (User) auth.getPrincipal();
+        productService.delete(id, user);
         return ResponseEntity.noContent().build();
     }
 }

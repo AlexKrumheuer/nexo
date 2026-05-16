@@ -17,6 +17,7 @@ const routes = [
   { path: '/categories', name: 'Category', component: Category, meta: { hideNavigation: false}},
   { path: '/product/:slug', name: "Product", component: Product, meta: {requiresAuth: true}},
   { path: '/cart', name: 'Cart', component: () => import('../pages/Cart.vue'), meta: {requiresAuth: true} },
+  { path: '/checkout', name: 'Checkout', component: () => import('../pages/Checkout.vue'), meta: {requiresAuth: true} },
   { 
     path: '/me', 
     name: 'User', 

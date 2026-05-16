@@ -49,16 +49,27 @@ const postProduct = async () => {
     loading.value = true
     try {
         const formData = new FormData();
+        console.log(form.value)
 
         Object.keys(form.value).forEach(key => {
-            if(form.value[key] !== null && form.value[key] !== undefined) {
-                formData.append(key,form.value[key])
+            let value = form.value[key];
+            
+            if ((key === 'price' || key === 'discountPercent' || key === 'stockQuantity') && value === "") {
+                value = 0;
             }
-        })
 
-        console.log(formData.value)
+            if(value !== null && value !== undefined) {
+                formData.append(key, value)
+            }
+        });
+
 
         selectedFiles.value.forEach(f => formData.append('images', f));
+
+        console.log("Enviando os seguintes dados para o Java:")
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ':', pair[1]);
+        }
 
         await api.post('/api/products', formData, {
             headers: {
@@ -207,7 +218,7 @@ const productValidation = () => {
             </div>
             <div class="header-actions">
                 <button class="btn-secondary" type="button" :disabled="loading">Cancel</button>
-                <button class="btn-primary" @click="postProduct()" :disabled="loading">
+                <button class="btn-primary" @click="postProduct()"  :disabled="loading">
                     <fa icon="spinner" spin v-if="loading" />
                     <fa icon="save" v-else/> 
                     {{ loading ? 'Saving...' : 'Save Product'}}
