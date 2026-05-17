@@ -1,44 +1,43 @@
-
 <script setup>
-    import {onMounted, ref} from 'vue'
-    import api from '../services/api'
-    import {useRouter} from 'vue-router'
-    import { userUserStore } from '../services/userStore'
-    import { storeToRefs } from 'pinia'
+import { onMounted, ref } from 'vue'
+import api from '../services/api'
+import { useRouter } from 'vue-router'
+import { userUserStore } from '../services/userStore'
+import { storeToRefs } from 'pinia'
 
-    const userStore = userUserStore()
+const userStore = userUserStore()
 
-    const { userData, loading } = storeToRefs(userStore)
+const { userData, loading } = storeToRefs(userStore)
 
-    const { fetchUser } = userStore 
-    const router = useRouter()
+const { fetchUser } = userStore
+const router = useRouter()
 
-    const openMenuPerfil = ref(false)
+const openMenuPerfil = ref(false)
 
-    const handleMouseEnter = () => {
-        openMenuPerfil.value = true
+const handleMouseEnter = () => {
+    openMenuPerfil.value = true
+}
+
+const handleMouseLeave = () => {
+    openMenuPerfil.value = false
+}
+
+
+const logout = async () => {
+    try {
+        await api.post("/auth/logout")
+    } catch (e) {
+        console.error("Fail when trying to log out")
+    } finally {
+        localStorage.removeItem("token")
+        userStore.clearUser()
+        router.push("/login")
     }
+}
 
-    const handleMouseLeave = () => {
-        openMenuPerfil.value = false
-    }
-
-
-    const logout = async () => {
-        try {
-            await api.post("/auth/logout")
-        } catch(e) {
-            console.error("Fail when trying to log out")
-        } finally{
-            localStorage.removeItem("token")
-            userStore.clearUser()
-            router.push("/login")
-        }
-    }
-
-    onMounted(() => {
-        fetchUser()
-    })
+onMounted(() => {
+    fetchUser()
+})
 
 </script>
 <template>
@@ -56,15 +55,15 @@
             <router-link to="/cart" class="cart">
                 <fa class="header-nav-icon" icon="cart-shopping" />
             </router-link>
-            
+
             <div class="wrapper-bell">
                 <fa class="header-nav-icon" icon="bell" />
                 <p class="notification">1</p>
             </div>
         </div>
-        <div  class="header-user" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
+        <div class="header-user" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
             <img class="user-icon" :src="userData?.perfilUrl || '/img/default-user-pic.png'" alt="">
-            <p>{{userData ? userData.username : 'Log In'}}</p>
+            <p>{{ userData ? userData.username : 'Log In' }}</p>
             <fa icon="angle-down" />
             <nav v-if="openMenuPerfil && userData" class="menu-perfil">
                 <router-link to="/me" class="perfil-redirect">Perfil</router-link>
@@ -149,7 +148,8 @@ header {
 .header-nav-icon {
     font-size: 1.5rem;
     cursor: pointer;
-    transition: 0.25s;
+    transition: 0.2import '../../style/main_content/slider.css'
+import '../../style/main_content/sliderItemCard.css'5s;
 }
 
 .header-nav-icon:hover {
@@ -206,8 +206,8 @@ header {
 }
 
 .menu-perfil {
-    background-color: #ffffff; 
-    color: #333333; 
+    background-color: #ffffff;
+    color: #333333;
     position: absolute;
     top: 100%;
     left: 25%;
@@ -215,8 +215,8 @@ header {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 0.8rem 0;
-    overflow: hidden; 
-    z-index: 100; 
+    overflow: hidden;
+    z-index: 100;
 }
 
 .menu-perfil::before {
@@ -243,15 +243,13 @@ header {
 
 .menu-perfil div:hover,
 .perfil-redirect:hover {
-    background-color: #f0f8ff; 
-    color: #367cc1; 
+    background-color: #f0f8ff;
+    color: #367cc1;
 }
 
 .cart {
     color: #fff;
 }
 
-.perfil-redirect {
-    
-}
+.perfil-redirect {}
 </style>

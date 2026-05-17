@@ -1,8 +1,7 @@
 <script setup>
-import '../../../style/admin/admin-global.css'
 import AdminFilter from './AdminFilter.vue'
 import api from '../../../services/api';
-import {onMounted, ref} from 'vue'
+import { onMounted, ref } from 'vue'
 import Pagination from '../Pagination.vue';
 
 
@@ -26,7 +25,7 @@ const fetchProductList = async () => {
 
         totalItems.value = response.data.totalElements
         totalPages.value = response.data.totalPages
-    } catch(error) {
+    } catch (error) {
         console.error("Error finding categories: " + error.message || error)
     } finally {
         loading.value = false
@@ -41,7 +40,7 @@ onMounted(() => {
 const changePage = (newPage) => {
     currentPage.value = newPage
     fetchProductList()
-    
+
 }
 
 const changeSize = (newSize) => {
@@ -88,14 +87,14 @@ const changeSize = (newSize) => {
                     <td>
                         <div class="flex-center-cell">
                             <div class="id-cell__img">
-                                <img :src=" product.images[0]" alt="Product">
+                                <img :src="product.images[0]" alt="Product">
                             </div>
                             <p>{{ product.title }}</p>
                         </div>
                     </td>
                     <td>Electronics</td>
                     <td>{{ formatPrice(product.price) }}</td>
-                    <td>{{product.stockQuantity}}</td>
+                    <td>{{ product.stockQuantity }}</td>
                     <td><span class="status-badge success">active</span></td>
                     <td>
                         <div class="flex-center-cell">
@@ -112,14 +111,422 @@ const changeSize = (newSize) => {
             </tbody>
         </table>
     </div>
-    <Pagination 
-        v-if="!loading"
-        :page="currentPage"
-        :totalPages="totalPages"
-        :totalItems="totalItems"
-        :size="size"
-        @change-page="changePage"
-        @change-size="changeSize"
-    >
+    <Pagination v-if="!loading" :page="currentPage" :totalPages="totalPages" :totalItems="totalItems" :size="size"
+        @change-page="changePage" @change-size="changeSize">
     </Pagination>
 </template>
+<style scoped>
+.admin-dashboard {
+    padding: 2rem;
+    background-color: #f5f7fb;
+    min-height: 100vh;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: #1f2937;
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    font-size: 1.8rem;
+    color: #111827;
+    font-weight: 700;
+}
+
+.dashboard-subtitle {
+    color: #6b7280;
+    font-size: 0.95rem;
+    margin-top: 0.2rem;
+}
+
+.admin-dashboard--content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+
+.main-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.grid-item {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f3f4f6;
+    background-color: #0369a1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h2 {
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 600;
+    margin: 0;
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.2rem;
+}
+
+.stat-trend {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.stat-trend.positive {
+    color: #10b981;
+}
+
+.stat-trend.negative {
+    color: #ef4444;
+}
+
+.stat-trend.warning {
+    color: #f59e0b;
+}
+
+.card-product__catalog {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-end;
+    padding-bottom: 0;
+}
+
+.card-product__catalog h2 {
+    font-size: 1rem;
+    color: #9ca3af;
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+    margin-bottom: 0;
+    opacity: 0.8;
+}
+
+.card-product__catalog h2:hover {
+    color: #fff;
+    opacity: 1;
+}
+
+.card-product__catalog h2.active-tab {
+    color: #fff;
+    opacity: 1;
+    border-bottom: 3px solid #fff;
+}
+
+.card-table-container {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+.filter-table {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background-color: #fff;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    background-color: #fff;
+    width: 300px;
+    gap: 0.5rem;
+}
+
+.filter-search-icon {
+    color: #9ca3af;
+}
+
+.filter-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.filter-table-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.filter-select {
+    padding: 0.6rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #374151;
+    cursor: pointer;
+    outline: none;
+    font-size: 0.9rem;
+}
+
+.filter-table--add {
+    padding: 0.6rem 1.2rem;
+    background-color: #0369a1;
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid #0369a1;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.filter-table--add:hover {
+    background-color: #fff;
+    color: #0369a1;
+}
+
+
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.admin-table th {
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+    vertical-align: middle;
+}
+
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+
+.flex-center-cell {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+}
+
+.id-cell__img {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.id-cell__img img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #e5e7eb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #6b7280;
+}
+
+
+.status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.status-badge.success,
+.status-badge.active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.pending {
+    background-color: #fef9c3;
+    color: #854d0e;
+}
+
+.status-badge.seller {
+    background-color: #e0f2fe;
+    color: #075985;
+}
+
+.status-badge.user {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: opacity 0.2s;
+    background: none;
+    border: none;
+}
+
+.action-btn:hover {
+    opacity: 0.8;
+}
+
+.action-btn.edit {
+    color: #0369a1;
+}
+
+.action-btn.ban {
+    color: #991b1b;
+}
+
+.action-btn.approve {
+    color: #166534;
+}
+
+.view-details {
+    color: #3b82f6;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: 500;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.view-details:hover {
+    text-decoration: underline;
+}
+
+.pagination-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.pagination-info {
+    color: #6b7280;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.pagination-info .highlight {
+    color: #111827;
+    font-weight: 700;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-btn:hover:not(.active):not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+    color: #111827;
+}
+
+.pagination-btn.active {
+    background-color: #0369a1;
+    border-color: #0369a1;
+    color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(3, 105, 161, 0.3);
+}
+
+.pagination-btn:disabled,
+.pagination-btn.disabled {
+    background-color: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.pagination-dots {
+    color: #6b7280;
+    padding: 0 0.2rem;
+    font-weight: 600;
+}
+</style>

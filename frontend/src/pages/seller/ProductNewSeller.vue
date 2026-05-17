@@ -478,7 +478,26 @@ textarea {
 .disabled-input {
     background-color: #f1f5f9;
     color: #94a3b8;
-    cursor: not-allowed;
+    cursor: not-allowed;* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    font-family: "Inter", "Arial";
+    font-size: 62.5%;
+  }
+
+  #app {
+    width: 100%;
+    height: 100%;
+
+  }
+
+  
 }
 
 .toggle-group {

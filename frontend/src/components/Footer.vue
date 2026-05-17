@@ -1,12 +1,12 @@
 <script setup>
-    const currentYear = new Date().getFullYear()
+const currentYear = new Date().getFullYear()
 
-    const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        })
-    }
+const scrollToTop = () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    })
+}
 </script>
 <template>
     <footer>
@@ -51,111 +51,111 @@
     </footer>
 </template>
 <style>
-    footer {
-        width: 100%;
-        background-color: #132e48; 
-        color: #e2e8f0;
-        display: flex;
-        flex-direction: column;
-    }
+footer {
+    width: 100%;
+    background-color: #132e48;
+    color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+}
 
-    .back-to-top {
-        width: 100%;
-        text-align: center;
-        background-color: #1e4770; 
-        padding: 1rem;
-        font-size: 0.9rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: #fff;
-        cursor: pointer;
-        transition: 0.3s;
-    }
+.back-to-top {
+    width: 100%;
+    text-align: center;
+    background-color: #1e4770;
+    padding: 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.3s;
+}
 
-    .back-to-top:hover {
-        background-color: #2a629a;
-    }
+.back-to-top:hover {
+    background-color: #2a629a;
+}
 
 
-    .footer-container {
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 4rem 2rem;
-    }
+.footer-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+}
 
+.footer-columns {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.ul-content {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 0;
+    min-width: 200px;
+}
+
+.list-title {
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.ul-content a {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.ul-content a:hover {
+    color: #f68c36;
+    padding-left: 5px;
+}
+
+
+.footer-credit {
+    background-color: #0f2438;
+    padding: 1.5rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.credit-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.footer-logo {
+    width: 6rem;
+    opacity: 0.8;
+    filter: brightness(0) invert(1);
+}
+
+.footer-credit p {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+@media (max-width: 768px) {
     .footer-columns {
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 2rem;
-    }
-
-    .ul-content {
-        list-style: none;
-        display: flex;
         flex-direction: column;
-        gap: 0.8rem;
-        padding: 0;
-        min-width: 200px; 
-    }
-
-    .list-title {
-        color: #fff;
-        font-weight: bold;
-        font-size: 1.1rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .ul-content a {
-        color: #cbd5e1;
-        text-decoration: none;
-        font-size: 0.9rem;
-        transition: color 0.2s;
-    }
-
-    .ul-content a:hover {
-        color: #f68c36; 
-        padding-left: 5px; 
-    }
-
-   
-    .footer-credit {
-        background-color: #0f2438; 
-        padding: 1.5rem 0;
-        border-top: 1px solid rgba(255,255,255,0.1);
+        text-align: center;
     }
 
     .credit-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1.5rem;
+        flex-direction: column;
+        gap: 1rem;
     }
-
-    .footer-logo {
-        width: 6rem;
-        opacity: 0.8; 
-        filter: brightness(0) invert(1); 
-    }
-    .footer-credit p {
-        font-size: 0.8rem;
-        color: #94a3b8;
-    }
-    
-    @media (max-width: 768px) {
-        .footer-columns {
-            flex-direction: column;
-            text-align: center;
-        }
-        
-        .credit-content {
-            flex-direction: column;
-            gap: 1rem;
-        }
-    }
-
+}
 </style>
