@@ -60,7 +60,7 @@ public class SellerService {
         }
         if(dto.supportPhone() != null) sellerSave.setSupportPhone(dto.supportPhone());
         sellerSave.setCommissionRate(new BigDecimal("70.00"));
-        sellerSave.setStatus(SellerStatus.PENDING);
+        sellerSave.setStatus(SellerStatus.ACTIVE);
 
         try {
             String imageUrl = imageService.uploadImage(file);
