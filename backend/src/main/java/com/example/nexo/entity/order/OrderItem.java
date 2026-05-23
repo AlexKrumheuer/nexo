@@ -2,8 +2,8 @@ package com.example.nexo.entity.order;
 
 import java.math.BigDecimal;
 
+import com.example.nexo.entity.product.Order;
 import com.example.nexo.entity.product.Product;
-import com.example.nexo.entity.user.Seller;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Entity;
@@ -35,10 +35,6 @@ public class OrderItem {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
-
-    @ManyToOne
-    @JoinColumn(name = "seller_id")
-    private Seller seller;
 
     private int quantity;
     private BigDecimal priceAtPurchase;

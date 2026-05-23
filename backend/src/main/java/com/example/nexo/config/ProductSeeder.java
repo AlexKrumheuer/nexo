@@ -3,6 +3,7 @@ package com.example.nexo.config;
 import java.math.BigDecimal;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.example.nexo.entity.product.Product;
@@ -15,6 +16,7 @@ import com.example.nexo.repository.user.SellerRepository;
 import jakarta.transaction.Transactional;
 
 @Component
+@Order(3)
 public class ProductSeeder implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;

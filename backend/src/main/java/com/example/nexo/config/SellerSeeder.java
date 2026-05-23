@@ -1,6 +1,7 @@
 package com.example.nexo.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import com.example.nexo.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
 
 @Component
+@Order(2)
 public class SellerSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;

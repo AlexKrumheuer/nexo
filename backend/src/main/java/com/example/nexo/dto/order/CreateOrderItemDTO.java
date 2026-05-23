@@ -2,7 +2,7 @@ package com.example.nexo.dto.order;
 
 import java.math.BigDecimal;
 
-import com.example.nexo.entity.order.Order;
+import com.example.nexo.entity.product.Order;
 import com.example.nexo.entity.product.Product;
 import com.example.nexo.entity.user.Seller;
 

@@ -1,10 +1,11 @@
-package com.example.nexo.entity.order;
+package com.example.nexo.entity.product;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.nexo.entity.user.Address;
+import com.example.nexo.entity.order.OrderItem;
+import com.example.nexo.entity.order.PaymentType;
 import com.example.nexo.entity.user.User;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -19,7 +20,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,18 +37,39 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-    @OneToOne
-    @JoinColumn(name = "address_id")
-    private Address address;
+
+    // Address
+    @Column(nullable = false)
+    private String shippingStreet;
+    @Column(nullable = false)
+    private String shippingNumber;
+    private String shippingComplement;
+    @Column(nullable = false)
+    private String shippingNeighborhood;
+    @Column(nullable = false)
+    private String shippingCity;
+    @Column(nullable = false)
+    private String shippingState;
+    @Column(nullable = false)
+    private String shippingZipCode;
+
+    // Payment
     @Column(nullable = false)
     private BigDecimal totalPrice;
     @Column(nullable = false)
+    private BigDecimal subtotal;
+    @Column(nullable = false)
+    private BigDecimal shippingPrice;
+    @Column(nullable = false)
+    private BigDecimal discountPrice;
     @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    @Column(nullable = false)
+    private PaymentType paymentMethod;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private PaymentType paymentMethod;
-    private String transactionId;
+    private OrderStatus status;
+    
     @Column(name = "created_at", columnDefinition = "TIMESTAMP default current_timestamp")
     private LocalDateTime createdAt;
     @Column(name = "updated_at", columnDefinition = "TIMESTAMP default current_timestamp on")
@@ -57,10 +78,5 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<OrderItem> orderList;
-
-    public Order(BigDecimal totalPrice, OrderStatus status) {
-        this.totalPrice = totalPrice;
-        this.status = status;
-    }
     
 }

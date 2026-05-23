@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import com.example.nexo.dto.order.ResponseCartDTO;
 import com.example.nexo.dto.product.CategoryResponseDTO;
+import com.example.nexo.dto.product.OrderItemResponseDTO;
+import com.example.nexo.dto.product.OrderResponseDTO;
 import com.example.nexo.dto.product.ProductImageResponseDTO;
 import com.example.nexo.dto.product.ProductResponseDTO;
 import com.example.nexo.dto.seller.SellerResponseDTO;
@@ -15,6 +17,7 @@ import com.example.nexo.dto.user.UserResponseDTO;
 import com.example.nexo.dto.user.UserResponseDetailedDTO;
 import com.example.nexo.entity.order.Cart;
 import com.example.nexo.entity.product.Category;
+import com.example.nexo.entity.product.Order;
 import com.example.nexo.entity.product.Product;
 import com.example.nexo.entity.user.Address;
 import com.example.nexo.entity.user.Seller;
@@ -132,10 +135,43 @@ public class Mapper {
             address.getStreet(), 
             address.getNumber(), 
             address.getComplement(), 
+            address.getNeighborhood(),
             address.getCity(), 
             address.getState(), 
             address.getZipCode(), 
             address.getAddressType()
+        );
+    }
+
+    public OrderResponseDTO MapperOrderResponse(Order order) {
+        List<OrderItemResponseDTO> itemDtos = order.getOrderList() != null
+            ? order.getOrderList().stream()
+                .map(item -> new OrderItemResponseDTO(
+                    item.getOrder().getId(),
+                    this.MapperProductResponse(item.getProduct()),
+                    item.getQuantity()
+                ))
+                .toList()
+            : Collections.emptyList();
+
+        return new OrderResponseDTO(
+            itemDtos,
+            order.getSubtotal(),
+            order.getShippingPrice(),
+            order.getDiscountPrice(),
+            order.getTotalPrice(),
+            order.getStatus().name(),
+            order.getPaymentMethod().name(),
+            order.getShippingStreet(),
+            order.getShippingNumber(),
+            order.getShippingComplement(),
+            order.getShippingNeighborhood(),
+            order.getShippingCity(),
+            order.getShippingState(),
+            order.getShippingZipCode(),
+
+            order.getCreatedAt(),
+            order.getUpdatedAt()
         );
     }
 }

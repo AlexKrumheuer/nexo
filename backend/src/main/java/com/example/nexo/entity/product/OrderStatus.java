@@ -1,10 +1,12 @@
-package com.example.nexo.entity.order;
+package com.example.nexo.entity.product;
 
 public enum OrderStatus {
+
     PENDING("PENDING"),
-    PAID("PAID"),
+    CONFIRMED("CONFIRMED"),
     SHIPPED("SHIPPED"),
-    DELIVERED("DELIVERED");
+    DELIVERED("DELIVERED"),
+    CANCELLED("CANCELLED");
 
     private final String status;
 

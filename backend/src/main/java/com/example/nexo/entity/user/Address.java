@@ -50,6 +50,10 @@ public class Address {
     @Size(max = 255, message = "Complement must have a max of 255 chars")
     private String complement;
 
+    @NotBlank(message = "Neighborhood is Obligated")
+    @Size(max = 255, message = "Neighborhood must have a max of 255 chars")
+    private String neighborhood;
+
     @NotBlank(message = "City is Obligated")
     private String city;
 

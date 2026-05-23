@@ -15,6 +15,7 @@ create table addresses(
     number varchar(20),
     complement varchar(255),
     city varchar(255) not null,
+    neighborhood varchar(255) not null,
     `state` varchar(2) not null,
     zip_code varchar(20) not null,
     address_type varchar(20) default "RESIDENCIAL",
@@ -108,25 +109,35 @@ create table cart(
 create table orders(
     id bigint primary key auto_increment,
     user_id bigint not null,
-    address_id bigint not null,
+
+    subtotal decimal(10,2) not null,
+    shipping_price decimal(10,2) not null,
+    discount_price decimal(10,2) not null,
     total_price decimal(19,2) not null,
+
     `status` varchar(20) default 'PENDING',
+
     payment_method varchar(50) not null,
-    transaction_id varchar(255) not null,
+
+    shipping_street varchar(255) not null,
+    shipping_number varchar(20) not null,
+    shipping_complement varchar(255),
+    shipping_neighborhood varchar(255) not null,
+    shipping_city varchar(255) not null,
+    shipping_state varchar(2) not null,
+    shipping_zip_code varchar(20) not null,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    foreign key (user_id) references users(id),
-    Foreign Key (address_id) REFERENCES addresses(id)
+    foreign key (user_id) references users(id)
 );
 
 create table order_items(
     id bigint primary key auto_increment,
     order_id bigint not null,
     product_id bigint not null,
-    seller_id bigint not null,
     quantity int not null,
     price_at_purchase decimal(19,2) not null,
     foreign key (order_id) references orders(id),
-    foreign key (product_id) references products(id),
-    foreign key (seller_id) references sellers(id)
+    foreign key (product_id) references products(id)
 );

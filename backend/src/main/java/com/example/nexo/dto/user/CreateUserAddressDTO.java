@@ -13,6 +13,9 @@ public record CreateUserAddressDTO(
     String number,
     @Size(max=255, message="Complement must have a max of 255 chars")
     String complement,
+    @NotBlank(message="Neighborhood is Obligated")
+    @Size(max=255, message="Neighborhood must have a max of 255 chars")
+    String neighborhood,
     @NotBlank(message="City is Obligated")
     String city,    
     @NotBlank(message="State is Obligated")

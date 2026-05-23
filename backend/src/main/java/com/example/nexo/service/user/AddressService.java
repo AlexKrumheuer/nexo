@@ -56,6 +56,7 @@ public class AddressService {
         addressToSave.setStreet(dto.street());
         addressToSave.setNumber(dto.number());
         if(dto.complement() != null) addressToSave.setComplement(dto.complement());
+        addressToSave.setNeighborhood(dto.neighborhood());
         addressToSave.setCity(dto.city());
         addressToSave.setState(dto.state());
         addressToSave.setZipCode(dto.zipCode());
@@ -85,6 +86,7 @@ public class AddressService {
         addressToEdit.setState(dto.state());
         addressToEdit.setZipCode(dto.zipCode());
         addressToEdit.setAddressType(dto.addressType());
+        addressToEdit.setNeighborhood(dto.neighborhood());
 
         addressRepository.save(addressToEdit);
 
