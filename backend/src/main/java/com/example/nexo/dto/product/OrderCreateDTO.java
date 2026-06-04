@@ -18,5 +18,4 @@ public record OrderCreateDTO(
     String paymentMethod,
     @NotNull(message="Address ID is required")
     Long address
-
 ) { }   

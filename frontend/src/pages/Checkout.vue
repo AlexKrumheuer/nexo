@@ -10,10 +10,9 @@ const toast = useToast()
 
 const order = ref({
   items: [],
-  total: 0,
-  shipping: 0,
-  selectedAddress: null,
-  selectedPayment: "",
+  shippingPrice: 0,
+  address: null,
+  paymentMethod: "",
 })
 
 const selectedAddress = ref(0)
@@ -27,14 +26,17 @@ const orderSummary = ref({
   shipping: 0.00, 
 })
 
+// Watcher to update the order's address whenever the selected address changes, ensuring the order reflects the user's choice
 watch(selectedAddress, (newIndex) => {
   if(userAddresses.value.length > 0 && userAddresses.value[newIndex]) {
-    order.value.selectedAddress = userAddresses.value[newIndex]
+    order.value.address = userAddresses.value[newIndex]
   }
 }, {immediate: true})
 
+
+// Watcher to update the order's payment method whenever the selected payment option changes, ensuring the order reflects the user's choice
 watch(selectedPayment, (newPayment) => {
-  order.value.selectedPayment = newPayment
+  order.value.paymentMethod = newPayment
 }, {immediate: true})
 
 const totalOrderPrice = computed(() => {
@@ -46,13 +48,34 @@ const formatCurrency = (value) => {
 }
 
 const handleFinishOrder = () => {
-  if (order.value.selectedPayment === "") {
+  console.log(cartStore.selectedToCheckout, userAddresses.value)
+    order.value.paymentMethod = selectedPayment.value
+
+  if (order.value.paymentMethod === "") {
     toast.error("Please, select a payment method!")
     return
   }
-  if (order.value.selectedAddress) {
+  order.value.address = userAddresses.value[selectedAddress.value].id || null
+  if (order.value.address === null) {
     toast.error("Please, select a delivery address!")
     return
+  }
+
+  for(const item of cartStore.selectedToCheckout) {
+    order.value.items.push({
+      product: item.product.id,
+      quantity: item.quantity
+    })
+  }
+  
+  order.value.shippingPrice = orderSummary.value.shipping
+
+  console.log(order.value)
+  try {
+    const response = api.post("/api/orders", order.value)
+  } catch(e) {
+    toast.error("Error processing your order")
+    console.error("Error processing order: " + e.message || e)
   }
 
 }
@@ -73,6 +96,7 @@ onMounted(() => {
   fetchUserAddresses()
 })
 
+// Fetch Addresses from the API to populate the user's address options for delivery, allowing them to select from their saved addresses during checkout
 const fetchUserAddresses = async () => {
   try {
     const response = await api.get("/address")
@@ -125,7 +149,7 @@ const fetchUserAddresses = async () => {
         <div class="payment-options-card">
           <label class="payment-row" :class="{ 'is-active': selectedPayment === 'credit' }">
             <div class="payment-radio-wrapper">
-              <input type="radio" name="payment" value="credit" v-model="selectedPayment" />
+              <input type="radio" name="payment" value="CREDIT_CARD" v-model="selectedPayment" />
             </div>
             <div class="payment-info">
               <span class="payment-label"><strong>Credit Card</strong></span>
@@ -134,7 +158,7 @@ const fetchUserAddresses = async () => {
           </label>
           <label class="payment-row" :class="{ 'is-active': selectedPayment === 'nupay' }">
             <div class="payment-radio-wrapper">
-              <input type="radio" name="payment" value="debit" v-model="selectedPayment" />
+              <input type="radio" name="payment" value="DEBIT_CARD" v-model="selectedPayment" />
             </div>
             <div class="payment-info">
               <span class="payment-label"><strong>Debit Card</strong></span>
@@ -143,7 +167,7 @@ const fetchUserAddresses = async () => {
           </label>
           <label class="payment-row" :class="{ 'is-active': selectedPayment === 'pix' }">
             <div class="payment-radio-wrapper">
-              <input type="radio" name="payment" value="pix" v-model="selectedPayment" />
+              <input type="radio" name="payment" value="PIX" v-model="selectedPayment" />
             </div>
             <div class="payment-info">
               <span class="payment-label"><strong>Pix</strong></span>
@@ -172,7 +196,7 @@ const fetchUserAddresses = async () => {
         </div>
         <div class="summary-row">
           <span>Frete:</span>
-          <span class="free-shipping">Grátis</span>
+          <span class="free-shipping">Free</span>
         </div>
 
         <hr class="summary-divider" />
@@ -185,329 +209,3 @@ const fetchUserAddresses = async () => {
     </aside>
   </div>
 </template>
-<style scoped>
-.checkout-container {
-  max-width: 1150px;
-  margin: 0 auto;
-  padding: 30px 20px;
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 30px;
-  font-family: sans-serif;
-  color: #333;
-}
-
-.checkout-main {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.checkout-section {
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 24px;
-}
-.checkout-container {
-  max-width: 1150px;
-  margin: 0 auto;
-  padding: 30px 20px;
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 30px;
-  font-family: sans-serif;
-  color: #333;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.section-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin: 0;
-  color: #333;
-}
-
-.user-name {
-  font-size: 0.95rem;
-  margin-bottom: 4px;
-  color: #111;
-}
-
-.address-text {
-  font-size: 0.95rem;
-  color: #555;
-  line-height: 1.5;
-  margin-bottom: 12px;
-}
-
-.btn-link {
-  background: none;
-  border: none;
-  color: #0369a1;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.btn-link:hover {
-  text-decoration: underline;
-  color: #024ea6;
-}
-
-.btn-sub-link {
-  background: none;
-  border: none;
-  color: #0369a1;
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 0;
-}
-
-.btn-sub-link:hover {
-  text-decoration: underline;
-}.checkout-container {
-  max-width: 1150px;
-  margin: 0 auto;
-  padding: 30px 20px;
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 30px;
-  font-family: sans-serif;
-  color: #333;
-}
-
-
-.payment-options-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  margin-top: 15px;
-  overflow: hidden;
-  background-color: #fff;
-}
-
-.payment-row {
-  display: flex;
-  padding: 18px;
-  border-bottom: 1px solid #e0e0e0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.payment-row:last-child {
-  border-bottom: none;
-}
-
-.payment-row:hover {
-  background-color: #f9f9f9;
-}
-
-.payment-row.is-active {
-  background-color: #f0fff4;
-  border-left: 4px solid #0369a1;
-  padding-left: 14px;
-}
-
-.payment-radio-wrapper {
-  padding-right: 12px;
-  display: flex;
-  align-items: flex-start;
-  padding-top: 2px;
-}
-
-.payment-radio-wrapper input[type="radio"] {
-  accent-color: #0369a1;
-}
-
-.payment-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.payment-label {
-  font-size: 0.95rem;
-  color: #2c3e50;
-}
-
-.payment-subtext {
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.checkout-sidebar {
-  position: sticky;
-  top: 20px;
-  height: fit-content;
-}
-
-.summary-card {
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 24px;
-}
-
-.btn-submit-order {
-  width: 100%;
-  background: #0369a1;
-  border: none;
-  color: white;
-  border-radius: 8px;
-  padding: 14px;
-  font-size: 1rem;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.2s ease;
-}
-
-.btn-submit-order:hover {
-  background: #024ea6;
-}
-
-.privacy-text {
-  font-size: 0.75rem;
-  color: #888;
-  text-align: center;
-  margin-top: 12px;
-  line-height: 1.4;
-}
-
-.summary-divider {
-  border: 0;
-  border-top: 1px solid #eee;
-  margin: 16px 0;
-}
-
-.summary-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: #333;
-}
-
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.95rem;
-  margin-bottom: 12px;
-  color: #666;
-}
-
-.free-shipping {
-  color: #2e7d32;
-  font-weight: bold;
-}
-
-.total-row {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-top: 10px;
-  color: #000;
-}
-
-.total-price {
-  color: #0369a1;
-}
-
-.card-address {
-  display: flex;
-  gap: 15px;
-  padding: 20px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  margin-top: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: #fff;
-}
-
-.card-address:hover {
-  border-color: #bdbdbd;
-  background-color: #f9f9f9;
-}
-
-.card-address.is-selected {
-  border-color: #0369a1;
-  background-color: #f0fff4;
-}
-
-.radio-wrapper {
-  display: flex;
-  align-items: flex-start;
-  padding-top: 2px;
-}
-
-.radio-wrapper input[type="radio"] {
-  accent-color: #0369a1;
-  transform: scale(1.1);
-  cursor: pointer;
-}
-
-.address-details {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-
-.address-type {
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #555;
-  letter-spacing: 0.5px;
-  margin: 0 0 4px 0;
-}
-
-.card-address.is-selected .address-type {
-  color: #0369a1;
-}
-
-.address-text {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #222;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.address-subtext {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 0;
-  background: #f1f3f5;
-  padding: 4px 10px;
-  border-radius: 6px;
-  width: fit-content;
-}
-
-.card-address.is-selected .address-subtext {
-  background: #e2f0e6;
-  color: #2e7d32;
-}
-
-.address-location {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 0;
-}
-
-@media (max-width: 900px) {
-  .checkout-container {
-    grid-template-columns: 1fr;
-  }
-
-  .checkout-sidebar {
-    position: relative;
-    top: 0;
-  }
-}
-
-</style>

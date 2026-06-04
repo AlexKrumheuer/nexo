@@ -1,5 +1,5 @@
 <script>
-import '../../style/main_content/activity.css'
+    import '../../style/main_content/activity.css'
 </script>
 <template>
     <div class="activity">
@@ -13,40 +13,3 @@ import '../../style/main_content/activity.css'
         <fa class="angle-icon" icon="angle-right" />
     </div>
 </template>
-<style scoped>
-.activity {
-    display: grid;
-    grid-template-columns: 80% 20%;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    background-color: #fcfcfc;
-    padding: 1rem;
-    border-radius: 8px;
-    width: 100%;
-    cursor: pointer;
-    transition: 0.25s;
-}
-
-.activity:hover {
-    transform: scale(1.1);
-}
-
-.activity-first {
-    display: flex;
-    gap: 1rem;
-}
-
-.activity-icon {
-    font-size: 2rem;
-}
-
-.activity-middle {
-    width: 100%;
-    font-size: 1rem;
-}
-
-.angle-icon {
-    font-size: 1.5rem;
-}
-</style>

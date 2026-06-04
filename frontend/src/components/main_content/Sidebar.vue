@@ -2,6 +2,7 @@
 import { userUserStore } from '../../services/userStore'
 import { storeToRefs } from 'pinia'
 import { onMounted } from 'vue'
+import '../../style/main_content/sidebar.css'
 
 const userStore = userUserStore()
 
@@ -9,7 +10,6 @@ const userStore = userUserStore()
 const { userData, loading } = storeToRefs(userStore)
 const { fetchUser } = userStore
 
-console.log(userData)
 
 onMounted(() => {
     fetchUser()
@@ -81,46 +81,3 @@ onMounted(() => {
         </ul>
     </nav>
 </template>
-<style scoped>
-.sidebar {
-    background-color: #fdfdfd;
-    height: 100vh;
-    position: sticky;
-    top: 0;
-    padding: 1rem;
-}
-
-.sidebar-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.sidebar-item {
-    list-style: none;
-
-
-}
-
-.sidebar-item__router {
-    background-color: #3b7bb9;
-    font-weight: bold;
-    font-size: 1rem;
-    padding: 0.8rem;
-    border-radius: 8px;
-    cursor: pointer;
-    text-decoration: none;
-    color: #fff;
-    transition: 0.25s;
-    display: flex;
-    gap: 0.5rem;
-    border: 1px solid transparent;
-    align-items: center;
-}
-
-.sidebar-item__router:hover {
-    color: #3b7bb9;
-    background-color: #fff;
-    border: 1px solid #3b7bb9;
-}
-</style>

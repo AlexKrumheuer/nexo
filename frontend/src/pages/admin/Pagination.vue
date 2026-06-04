@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue';
-import '../../style/pagination.css'
 
 const emit = defineEmits(['change-page', 'change-size'])
 

@@ -1,10 +1,10 @@
 package com.example.nexo.entity.order;
 
 public enum PaymentType {
-    PIX("PIX"),
-    CREDIT_CARD("CREDIT_CARD"),
-    DEBIT_CARD("DEBIT_CARD"),
-    BOLETO("BOLETO");
+    PIX("pix"),
+    CREDIT_CARD("credit"),
+    DEBIT_CARD("debit"),
+    BOLETO("boleto");
 
     private final String method;
 

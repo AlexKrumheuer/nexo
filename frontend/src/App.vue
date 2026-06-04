@@ -1,9 +1,9 @@
 <script setup>
 import {useRoute} from  'vue-router'
-import './style/style.css'
 import Footer from './components/Footer.vue'
 import Header from './components/Header.vue'
 import Sidebar from './components/main_content/Sidebar.vue'
+import './style/style.css'
 const route = useRoute()
 </script>
 
@@ -26,25 +26,6 @@ const route = useRoute()
 </template>
 
 <style scoped>
-* {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    width: 100vw;
-    height: 100vh;
-    font-family: "Inter", "Arial";
-    font-size: 62.5%;
-  }
-
-  #app {
-    width: 100%;
-    height: 100%;
-
-  }
-
 .app-layout {
   display: flex;
   min-height: 80vh; 
