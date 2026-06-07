@@ -4,10 +4,12 @@ import { useRoute } from 'vue-router';
 import api from '../services/api';
 import { useToast } from 'vue-toastification';
 import '../style/main_content/product.css'
+import LoadingOverlay from './LoadingOverlay.vue';
 
 const route = useRoute()
 const product = ref(null)
 const loading = ref(true)
+const loadingApi = ref(false)
 const toast = useToast()
 
 const formatPrice = (value) => {
@@ -38,20 +40,26 @@ const setImage = (imgUrl) => {
 }
 
 const addCart = async (productId)=> {
+    loadingApi.value = true
     try {
-        console.log(productId)
         const body = {productId:productId, quantity:1}
         await api.post("/api/cart", body)
-        toast.success("Item adicionado com sucesso ao carrinho")
+        toast.success("Item added successfully to cart")
     } catch(e){
         console.error("Error: " + e.message || e)
-        toast.error("Erro ao adicionar esse produto ao carrinho, tente novamente")
+        toast.error("Error adding item to cart, please try again")
+    } finally {
+        loadingApi.value = false
     }
 }
 
 </script>
 
 <template>
+    <teleport to="body">
+        <LoadingOverlay v-if="loadingApi"/>
+    </teleport>
+
     <div v-if="loading" style="text-align: center; padding: 50px;">
         <h2>Loading Product...</h2>
     </div>
@@ -107,7 +115,7 @@ const addCart = async (productId)=> {
 
         <div class="buy-box">
             <div class="shipping">
-                <h2>Calcular envio</h2>
+                <h2>Calc Shipping</h2>
                 <div class="input-shipping">
                     <input type="text" placeholder="CEP">
                     <button>OK</button>

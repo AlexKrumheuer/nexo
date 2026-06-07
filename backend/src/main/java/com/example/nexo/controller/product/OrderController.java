@@ -1,10 +1,15 @@
 package com.example.nexo.controller.product;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.nexo.dto.product.OrderCreateDTO;
@@ -21,6 +26,27 @@ import lombok.RequiredArgsConstructor;
 public class OrderController {
     
     private final OrderService orderService;
+
+    @GetMapping
+    public ResponseEntity<List<OrderResponseDTO>> getOrders(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        List<OrderResponseDTO> orders = orderService.getOrders(user);
+        return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/{orderCode}")
+    public ResponseEntity<OrderResponseDTO> getOrderByCode(@PathVariable String orderCode, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderResponseDTO order = orderService.getOrderByCode(user, orderCode);
+        return ResponseEntity.ok(order);
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersByStatus(@RequestParam String status, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        List<OrderResponseDTO> orders = orderService.getOrdersByStatus(user, status);
+        return ResponseEntity.ok(orders);
+    }
 
     @PostMapping
     public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody @Valid OrderCreateDTO dto, Authentication authentication) {

@@ -28,9 +28,7 @@ main {
     gap: 1rem;
 }
 
-.container-slider {
-    background-color: #f68c36;
-}
+
 
 .container-slider-wrapper {
     display: flex;

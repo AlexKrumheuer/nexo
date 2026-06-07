@@ -4,9 +4,14 @@ import { useCartStore } from '../services/cartStore'
 import { useToast } from 'vue-toastification'
 import "../style/checkout.css"
 import api from '../services/api'
+import LoadingOverlay from './LoadingOverlay.vue'
+import { useRouter } from 'vue-router'
 
 const cartStore = useCartStore()
 const toast = useToast()
+const loading = ref(false)
+
+const router = useRouter()
 
 const order = ref({
   items: [],
@@ -47,17 +52,22 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 }
 
-const handleFinishOrder = () => {
-  console.log(cartStore.selectedToCheckout, userAddresses.value)
+const handleFinishOrder = async () => {
     order.value.paymentMethod = selectedPayment.value
 
   if (order.value.paymentMethod === "") {
     toast.error("Please, select a payment method!")
     return
   }
-  order.value.address = userAddresses.value[selectedAddress.value].id || null
+  try { 
+      order.value.address = userAddresses.value[selectedAddress.value].id
+  } catch(e) {
+      order.value.address = null
+  }
+  console.log(order.value.address)
   if (order.value.address === null) {
-    toast.error("Please, select a delivery address!")
+    toast.error("Please, add a delivery address!")
+    router.push("me/addresses")
     return
   }
 
@@ -69,15 +79,16 @@ const handleFinishOrder = () => {
   }
   
   order.value.shippingPrice = orderSummary.value.shipping
-
-  console.log(order.value)
+  loading.value = true
   try {
-    const response = api.post("/api/orders", order.value)
+    const response = await api.post("/api/orders", order.value)
+    router.push("my-orders/" + response.data.orderCode)
   } catch(e) {
     toast.error("Error processing your order")
     console.error("Error processing order: " + e.message || e)
+  } finally {
+    loading.value = false
   }
-
 }
 
 onMounted(() => {
@@ -98,16 +109,20 @@ onMounted(() => {
 
 // Fetch Addresses from the API to populate the user's address options for delivery, allowing them to select from their saved addresses during checkout
 const fetchUserAddresses = async () => {
+  loading.value = true
   try {
     const response = await api.get("/address")
     userAddresses.value = response.data.address || []
   } catch (e) {
     console.error("Error fetching user addresses: " + e.message || e)
+  } finally {
+    loading.value = false
   }
 }
 </script>
 
 <template>
+  <LoadingOverlay v-if="loading"/>
   <div class="checkout-container">
     <main class="checkout-main">
 

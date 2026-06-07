@@ -17,17 +17,18 @@ import com.example.nexo.entity.product.Order;
 import com.example.nexo.entity.product.OrderStatus;
 import com.example.nexo.entity.product.Product;
 import com.example.nexo.entity.user.Address;
+import com.example.nexo.entity.user.Seller;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.infra.exception.ProductException;
 import com.example.nexo.repository.order.OrderItemRepository;
 import com.example.nexo.repository.order.OrderRepository;
 import com.example.nexo.repository.product.ProductRepository;
 import com.example.nexo.repository.user.AddressRepository;
+import com.example.nexo.repository.user.SellerRepository;
 import com.example.nexo.util.Mapper;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import tools.jackson.databind.ext.javatime.ser.LocalDateTimeSerializer;
 
 @Service
 @RequiredArgsConstructor
@@ -36,8 +37,44 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
+    private final SellerRepository sellerRepository;
     private final AddressRepository addressRepository;
     private final Mapper mapper;
+
+
+    @Transactional
+    public List<OrderResponseDTO> getOrders(User user) {
+        List<Order> orders = orderRepository.findByUserOrderByCreatedAtDesc(user);
+        return orders.stream()
+                .map(mapper::MapperOrderResponse)
+                .toList();
+    }
+
+    @Transactional
+    public OrderResponseDTO getOrderByCode(User user, String orderCode) {
+        Order order = orderRepository.findByUserAndOrderCode(user, orderCode)
+                .orElseThrow(() -> new ProductException("Order not found", HttpStatus.NOT_FOUND));
+        return mapper.MapperOrderResponse(order);
+    }   
+
+    @Transactional
+    public List<OrderResponseDTO> getOrdersByStatus(User user, String status) {
+        List<Order> orders;
+        if (status.equalsIgnoreCase("all")) {
+            orders = orderRepository.findByUserOrderByCreatedAtDesc(user);
+        } else {
+            OrderStatus orderStatus;
+            try {
+                orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ProductException("Invalid order status: " + status, HttpStatus.BAD_REQUEST);
+            }
+            orders = orderRepository.findByUserAndStatusOrderByCreatedAtDesc(user, orderStatus);
+        }
+        return orders.stream()
+                .map(mapper::MapperOrderResponse)
+                .toList();
+    }
 
     @Transactional
     public OrderResponseDTO createOrder(OrderCreateDTO dto, User user) {
@@ -52,6 +89,9 @@ public class OrderService {
         for (OrderItemCreateDTO itemDto : dto.items()) {
             Product product = productRepository.findById(itemDto.product())
                     .orElseThrow(() -> new ProductException("Product Not found", HttpStatus.NOT_FOUND));
+            
+            Seller seller = sellerRepository.findById(product.getSeller().getId())
+                    .orElseThrow(() -> new ProductException("Seller Not found", HttpStatus.NOT_FOUND));
 
             // Convert the quantity to BigDecimal for accurate calculations
             BigDecimal quantity = new BigDecimal(itemDto.quantity());
@@ -59,6 +99,7 @@ public class OrderService {
             // Create and salve order item
             OrderItem orderItem = new OrderItem();
             orderItem.setProduct(product);
+            orderItem.setSeller(seller);
             orderItem.setQuantity(itemDto.quantity());
             orderItem.setPriceAtPurchase(product.getFinalPrice());
             orderItems.add(orderItem);

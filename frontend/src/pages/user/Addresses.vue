@@ -1,17 +1,22 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import api from '../../services/api';
+import { useRouter } from 'vue-router';
+import LoadingOverlay from '../LoadingOverlay.vue';
 
 const selectedAddress = ref(0);
 
 const pageState = ref('list')
-
+const router = useRouter()
 const addresses = ref([])
+
+const loading = ref(false)
 
 const addressObject = ref({
     street: '',
     number: '',
     complement: '',
+    neighborhood: '',
     city: '',
     state: '',
     zipCode: '',
@@ -23,6 +28,7 @@ const editAddressObject = ref({
     street: '',
     number: '',
     complement: '',
+    neighborhood: '',
     city: '',
     state: '',
     zipCode: '',
@@ -30,6 +36,7 @@ const editAddressObject = ref({
 })
 
 const addressesAddAddress = async () => {
+    loading.value = true
     try {
         const response = await api.post('/address', addressObject.value)
         console.log('Address added successfully:', response.data)
@@ -46,6 +53,8 @@ const addressesAddAddress = async () => {
         changePageState('cancel')
     } catch (error) {
         console.error('Error adding address:', error)
+    } finally {
+        loading.value = false
     }
 }
 
@@ -55,6 +64,7 @@ const editAddress = (address) => {
 }
 
 const editAddressSubmit = async () => {
+    loading.value = true
     try {
         const response = await api.put(`/address/${editAddressObject.value.id}`, editAddressObject.value)
         console.log('Address edited successfully:', response.data)
@@ -72,6 +82,8 @@ const editAddressSubmit = async () => {
         changePageState('cancel')
     } catch (error) {
         console.error('Error editing address:', error)
+    } finally {
+        loading.value = false
     }
 }
 
@@ -80,9 +92,8 @@ onMounted(() => {
 })
 
 const fetchAddress = async () => {
-    const loading = ref(true)
+    loading.value = true
     try {
-        loading.value = true
         const addressesResponse = await api.get('/address')
         addresses.value = addressesResponse.data.address || []
     } catch (error) {
@@ -90,15 +101,22 @@ const fetchAddress = async () => {
     } finally {
         loading.value = false
     }
+
+    if(addresses.length == 0) {
+            router.push('/me/addresses')
+        }
 }
 
 const removeAddress = async (id) => {
+    loading.value = true
     try {
         await api.delete(`/address/${id}`)
         console.log('Address removed successfully')
         await fetchAddress()
     } catch (error) {
         console.error('Error removing address:', error)
+    } finally {
+        loading.value = false
     }
 }
 
@@ -122,12 +140,13 @@ const changePageState = (state) => {
 </script>
 
 <template>
+    <LoadingOverlay v-if="loading"/>
     <div class="container-address">
         <h1 class="title">That's all your address</h1>
 
         <div v-if="pageState === 'list'" class="checkout-layout">
-            <p v-if="addresses.length === 0">You don't have any addresses yet.</p>
-            <form v-else class="address-list">
+            <p v-if="addresses.length === 0 && loading == false">You don't have any addresses yet.</p>
+            <form class="address-list">
                 <label v-for="(addr, index) in addresses" :key="addr.id" class="card-address"
                     :class="{ 'is-selected': selectedAddress === index }">
 
@@ -144,7 +163,7 @@ const changePageState = (state) => {
                                 <fa class="remove" icon="trash" @click.stop="removeAddress(addr.id)"></fa>
                             </div>
                         </div>
-
+                        
                         <p class="address-text">
                             <strong>{{ addr.street }}</strong>, {{ addr.number }}
                         </p>
@@ -181,12 +200,17 @@ const changePageState = (state) => {
                 <div class="form-group form-street">
                     <div class="form-street-container">
                         <label for="full-address">Street</label>
-                        <input type="text" id="full-address" placeholder="Street, Neighborhood"
+                        <input type="text" id="full-address" placeholder="Street"
                             v-model="addressObject.street">
                     </div>
                     <div class="form-street-container">
                         <label for="number">Street Number</label>
                         <input type="text" id="number" placeholder="Number" v-model="addressObject.number">
+                    </div>
+                     <div class="form-street-container">
+                        <label for="full-address">Neighborhood</label>
+                        <input type="text" id="full-address" placeholder="Neighborhood"
+                            v-model="addressObject.neighborhood">
                     </div>
                 </div>
 
@@ -242,6 +266,11 @@ const changePageState = (state) => {
                     <div class="form-street-container">
                         <label for="number">Street Number</label>
                         <input type="text" id="number" placeholder="Number" v-model="editAddressObject.number">
+                    </div>
+                     <div class="form-street-container">
+                        <label for="full-address">Neighborhood</label>
+                        <input type="text" id="full-address" placeholder="Neighborhood"
+                            v-model="editAddressObject.neighborhood">
                     </div>
                 </div>
 

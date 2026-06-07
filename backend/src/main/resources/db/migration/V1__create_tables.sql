@@ -110,6 +110,8 @@ create table orders(
     id bigint primary key auto_increment,
     user_id bigint not null,
 
+    order_code varchar(255) not null unique,
+
     subtotal decimal(10,2) not null,
     shipping_price decimal(10,2) not null,
     discount_price decimal(10,2) not null,
@@ -136,8 +138,10 @@ create table order_items(
     id bigint primary key auto_increment,
     order_id bigint not null,
     product_id bigint not null,
+    seller_id bigint not null,
     quantity int not null,
     price_at_purchase decimal(19,2) not null,
     foreign key (order_id) references orders(id),
-    foreign key (product_id) references products(id)
+    foreign key (product_id) references products(id),
+    foreign key (seller_id) references sellers(id)
 );

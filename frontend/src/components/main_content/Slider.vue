@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import api from '../../services/api'
 import '../../style/main_content/slider.css'
 import '../../style/main_content/sliderItemCard.css'
+import LoadingOverlay from '../../pages/LoadingOverlay.vue'
 
 const props = defineProps({
     slider: {
@@ -11,35 +12,46 @@ const props = defineProps({
     }
 })
 
+const loading = ref(false)
+
 let scrollContainer = ref(null)
 let listProducts = ref([])
 let listRandom = ref([])
 let listLatest = ref([])
 const getRandomProducts = async () => {
+    loading.value = true
     try {
         const response = await api.get("/api/products/public/random")
         listRandom.value = response.data
     } catch (e) {
         console.error("Error getting recommended products: ", e)
+    } finally {
+        loading.value = false
     }
 }
 
 const getLatestProducts = async () => {
+    loading.value = true
     try {
         const response = await api.get("/api/products/public/last")
         listLatest.value = response.data
     } catch (e) {
         console.error("Error getting latest products: ", e)
+    } finally {
+        loading.value = false
     }
 }
 
 const getListProducts = async () => {
+    loading.value = true
     try {
         const response = await api.get("/api/products/public?page=0&size=10")
         listProducts.value = response.data.content
 
     } catch (e) {
         console.error("Error getting products: ", e)
+    } finally {
+        loading.value = false
     }
 }
 
@@ -69,6 +81,7 @@ const scrollLeft = () => {
 }
 </script>
 <template>
+    <LoadingOverlay v-if="loading"></LoadingOverlay>
     <div class="slider">
         <div class="slider-title">
             <h2 v-if="slider == 'recommended'">{{ "Recommended for you" }}</h2>

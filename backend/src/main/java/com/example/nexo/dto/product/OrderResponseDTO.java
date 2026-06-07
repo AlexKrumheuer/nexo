@@ -21,6 +21,7 @@ public record OrderResponseDTO(
     String shippingCity,
     String shippingState,
     String shippingZipCode,
+    String orderCode,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) { }

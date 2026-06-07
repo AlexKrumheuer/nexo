@@ -17,6 +17,8 @@ const routes = [
   { path: '/categories', name: 'Category', component: Category, meta: { hideNavigation: false}},
   { path: '/product/:slug', name: "Product", component: Product, meta: {requiresAuth: true}},
   { path: '/cart', name: 'Cart', component: () => import('../pages/Cart.vue'), meta: {requiresAuth: true} },
+  { path: '/my-orders', name: 'MyOrders', component: () => import('../pages/MyOrders.vue'), meta: {requiresAuth: true} },
+    { path: '/my-orders/:orderCode', name: 'OrderDetail', component: () => import('../pages/OrderDetail.vue'), meta: {requiresAuth: true} },
   { path: '/checkout', name: 'Checkout', component: () => import('../pages/Checkout.vue'), meta: {requiresAuth: true} },
   { 
     path: '/me', 

@@ -28,13 +28,9 @@ public class AddressService {
     private final UserRepository userRepository;
     
     @Transactional()
-    public UserResponseDetailedDTO getAllAddress(User user) {
-        List<Address> userWithAddresses = addressRepository.findAllByUser(user);
-
-        if (!userWithAddresses.isEmpty()) {
-            user.setAddresses(userWithAddresses);
-        }
-
+    public UserResponseDetailedDTO getAllAddress(User userLogado) {
+        User user = userRepository.findById(userLogado.getId())
+        .orElseThrow(() -> new UserException("User not found", HttpStatus.NOT_FOUND));
         return mapper.MapperUserDetailedResponse(user);
     }
 
@@ -64,6 +60,8 @@ public class AddressService {
         addressToSave.setUser(user);
 
         addressRepository.save(addressToSave);
+
+        user.getAddresses().add(addressToSave);
 
         return mapper.MapperUserDetailedResponse(user);
     }
@@ -106,6 +104,7 @@ public class AddressService {
         }
 
         addressRepository.delete(address);
+        user.getAddresses().remove(address);
 
         return mapper.MapperUserDetailedResponse(user);
     }

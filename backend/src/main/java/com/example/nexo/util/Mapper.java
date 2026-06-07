@@ -9,9 +9,11 @@ import com.example.nexo.dto.order.ResponseCartDTO;
 import com.example.nexo.dto.product.CategoryResponseDTO;
 import com.example.nexo.dto.product.OrderItemResponseDTO;
 import com.example.nexo.dto.product.OrderResponseDTO;
+import com.example.nexo.dto.product.ProductCompleteResponseDTO;
 import com.example.nexo.dto.product.ProductImageResponseDTO;
 import com.example.nexo.dto.product.ProductResponseDTO;
 import com.example.nexo.dto.seller.SellerResponseDTO;
+import com.example.nexo.dto.seller.SellerResumedResponseDTO;
 import com.example.nexo.dto.user.AddressResponseDTO;
 import com.example.nexo.dto.user.UserResponseDTO;
 import com.example.nexo.dto.user.UserResponseDetailedDTO;
@@ -68,6 +70,50 @@ public class Mapper {
                 imageDtos);
     }
 
+
+
+    public ProductCompleteResponseDTO MapperProductAndSeller(Product product, Seller seller) {
+        List<ProductImageResponseDTO> imageDtos = product.getImages() != null
+                ? product.getImages().stream()
+                        .map(img -> new ProductImageResponseDTO(img.getId(), img.getUrl()))
+                        .toList()
+                : Collections.emptyList();
+
+        CategoryResponseDTO categoryDto = null;
+        if (product.getCategory() != null) {
+            categoryDto = new CategoryResponseDTO(
+                    product.getCategory().getId(),
+                    product.getCategory().getName(),
+                    product.getCategory().getSlug(),
+                    product.getCategory().getDescription(),
+                    product.getCategory().getActive(),
+                    product.getCategory().getImageUrl(),
+                    product.getCategory().getDisplayOrder(),
+                    product.getCategory().getParent() != null ? product.getCategory().getParent().getId() : null);
+        }
+
+        SellerResumedResponseDTO sellerDto = this.MapperSellerResumedResponse(seller);
+
+        return new ProductCompleteResponseDTO(
+                product.getId(),
+                product.getTitle(),
+                product.getPrice(),
+                product.getFinalPrice(),
+                product.getDescription(),
+                product.getDiscountPercent(),
+                product.getStockQuantity(),
+                product.getBrand(),
+                product.getActive(),
+                categoryDto,
+                product.getSlug(),
+                product.getSku(),
+                product.getCreatedAt(),
+                product.getUpdatedAt(),
+                imageDtos,
+                sellerDto
+            );
+    }
+
     public CategoryResponseDTO MapperCategoryResponse(Category category){
         Long parent = category.getParent() == null ? null : category.getParent().getId();
         return new CategoryResponseDTO(
@@ -122,6 +168,16 @@ public class Mapper {
         );
     }
 
+    public SellerResumedResponseDTO MapperSellerResumedResponse(Seller seller) {
+        return new SellerResumedResponseDTO(
+            seller.getStoreName(),
+            seller.getCpf(),
+            seller.getCnpj(),
+            seller.getSupportPhone(),
+            seller.getLogoUrl()
+        );
+    }
+
     public ResponseCartDTO MapperCartResponse(Cart cart) {
 
         ProductResponseDTO productMapped = this.MapperProductResponse(cart.getProduct());
@@ -149,6 +205,7 @@ public class Mapper {
                 .map(item -> new OrderItemResponseDTO(
                     item.getOrder().getId(),
                     this.MapperProductResponse(item.getProduct()),
+                    this.MapperSellerResumedResponse(item.getSeller()),
                     item.getQuantity()
                 ))
                 .toList()
@@ -169,7 +226,7 @@ public class Mapper {
             order.getShippingCity(),
             order.getShippingState(),
             order.getShippingZipCode(),
-
+            order.getOrderCode(),
             order.getCreatedAt(),
             order.getUpdatedAt()
         );

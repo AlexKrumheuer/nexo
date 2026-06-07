@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.example.nexo.dto.seller.SellerResumedResponseDTO;
 
-public record ProductResponseDTO(
+
+public record ProductCompleteResponseDTO(
         Long id,
         String title,
         BigDecimal price,
@@ -20,6 +22,7 @@ public record ProductResponseDTO(
         String sku,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        List<ProductImageResponseDTO> images
+        List<ProductImageResponseDTO> images,
+        SellerResumedResponseDTO seller
 ) {}
 
