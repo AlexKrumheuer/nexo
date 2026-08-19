@@ -18,6 +18,8 @@ import com.example.nexo.service.user.AddressService;
 
 import jakarta.validation.Valid;
 
+// Endpoints related to address
+
 @RestController
 @RequestMapping("/address")
 public class AddressController {

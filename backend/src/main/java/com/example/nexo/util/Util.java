@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import org.springframework.stereotype.Component;
 
+// File for usefull methods
 @Component
 public class Util {
     public static BigDecimal calculateFinalPrice(BigDecimal price, Integer discount) {

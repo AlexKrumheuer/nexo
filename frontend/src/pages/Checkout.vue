@@ -64,7 +64,6 @@ const handleFinishOrder = async () => {
   } catch(e) {
       order.value.address = null
   }
-  console.log(order.value.address)
   if (order.value.address === null) {
     toast.error("Please, add a delivery address!")
     router.push("me/addresses")

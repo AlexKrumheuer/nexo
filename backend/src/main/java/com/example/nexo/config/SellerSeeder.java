@@ -15,6 +15,7 @@ import com.example.nexo.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
 
 @Component
+// Class to feed seller table
 @Order(2)
 public class SellerSeeder implements CommandLineRunner {
     private final UserRepository userRepository;

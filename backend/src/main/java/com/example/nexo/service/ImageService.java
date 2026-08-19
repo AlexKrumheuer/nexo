@@ -12,6 +12,8 @@ import com.cloudinary.utils.ObjectUtils;
 
 import lombok.RequiredArgsConstructor;
 
+
+// File resposible for uploading images in Cloudinary
 @Service
 @RequiredArgsConstructor
 public class ImageService {

@@ -6,8 +6,11 @@ import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+
 import com.example.nexo.infra.exception.SlugException;
 
+
+// File for generating a Slug
 @Component
 public class SlugUtil {
     public static String generateSlug(String title, Predicate<String> slugExists) {

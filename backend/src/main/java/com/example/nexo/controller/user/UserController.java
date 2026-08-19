@@ -2,13 +2,23 @@ package com.example.nexo.controller.user;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
 import com.example.nexo.dto.user.UserResponseDTO;
 import com.example.nexo.dto.user.UserUpdateUsernameDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.service.user.UserService;
+
 import jakarta.validation.Valid;
+
+// Endpoints related to User
 
 @RestController
 @RequestMapping("/users")

@@ -16,6 +16,9 @@ import com.example.nexo.dto.seller.SellerResponseDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.service.user.SellerService;
 
+
+// Endpoints related to Seller
+
 @RestController
 @RequestMapping("/seller")
 public class SellerController {

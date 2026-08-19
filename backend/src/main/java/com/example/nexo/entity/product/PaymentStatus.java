@@ -1,16 +1,15 @@
 package com.example.nexo.entity.product;
 
-public enum OrderStatus {
-
-    PENDING("PENDING"),
-    CONFIRMED("CONFIRMED"),
-    SHIPPED("SHIPPED"),
-    DELIVERED("DELIVERED"),
+public enum PaymentStatus {
+    AWAITING_PAYMENT("AWAITING_PAYMENT"),
+    PAID("PAID"),
+    FAILED("FAILED"),
+    REFUNDED("REFUNDED"),
     CANCELLED("CANCELLED");
 
     private final String status;
 
-    OrderStatus(String status) {
+    PaymentStatus(String status) {
         this.status = status;
     }
 

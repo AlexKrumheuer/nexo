@@ -20,6 +20,9 @@ import com.example.nexo.service.product.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+
+// Endpoints related to orders
+
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor

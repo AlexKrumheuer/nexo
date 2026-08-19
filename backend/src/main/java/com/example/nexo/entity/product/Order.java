@@ -72,11 +72,10 @@ public class Order {
     private BigDecimal discountPrice;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentType paymentMethod;
-
-    @Column(nullable = false)
+    private PaymentStatus paymentStatus;
     @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    @Column(nullable = false)
+    private PaymentType paymentMethod;
     
     @Column(name = "created_at", columnDefinition = "TIMESTAMP default current_timestamp")
     private LocalDateTime createdAt;

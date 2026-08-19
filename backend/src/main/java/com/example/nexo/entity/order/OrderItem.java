@@ -2,12 +2,16 @@ package com.example.nexo.entity.order;
 
 import java.math.BigDecimal;
 
+import com.example.nexo.entity.product.DeliveryStatus;
 import com.example.nexo.entity.product.Order;
 import com.example.nexo.entity.product.Product;
 import com.example.nexo.entity.user.Seller;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -43,4 +47,9 @@ public class OrderItem {
 
     private int quantity;
     private BigDecimal priceAtPurchase;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="shipping_status")
+    private DeliveryStatus shippingStatus;
+    private String trackingCode;
 }

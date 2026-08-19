@@ -4,6 +4,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// Endpoints related to admin
+
 @RestController
 @RequestMapping("/admin")
 @EnableMethodSecurity(securedEnabled = true)

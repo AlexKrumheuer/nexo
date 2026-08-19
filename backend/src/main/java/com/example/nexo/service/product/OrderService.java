@@ -13,8 +13,9 @@ import com.example.nexo.dto.product.OrderItemCreateDTO;
 import com.example.nexo.dto.product.OrderResponseDTO;
 import com.example.nexo.entity.order.OrderItem;
 import com.example.nexo.entity.order.PaymentType;
+import com.example.nexo.entity.product.DeliveryStatus;
 import com.example.nexo.entity.product.Order;
-import com.example.nexo.entity.product.OrderStatus;
+import com.example.nexo.entity.product.PaymentStatus;
 import com.example.nexo.entity.product.Product;
 import com.example.nexo.entity.user.Address;
 import com.example.nexo.entity.user.Seller;
@@ -63,13 +64,13 @@ public class OrderService {
         if (status.equalsIgnoreCase("all")) {
             orders = orderRepository.findByUserOrderByCreatedAtDesc(user);
         } else {
-            OrderStatus orderStatus;
+            PaymentStatus orderStatus;
             try {
-                orderStatus = OrderStatus.valueOf(status.toUpperCase());
+                orderStatus = PaymentStatus.valueOf(status.toUpperCase());
             } catch (IllegalArgumentException e) {
                 throw new ProductException("Invalid order status: " + status, HttpStatus.BAD_REQUEST);
             }
-            orders = orderRepository.findByUserAndStatusOrderByCreatedAtDesc(user, orderStatus);
+            orders = orderRepository.findByUserAndPaymentStatusOrderByCreatedAtDesc(user, orderStatus);
         }
         return orders.stream()
                 .map(mapper::MapperOrderResponse)
@@ -133,7 +134,7 @@ public class OrderService {
         order.setShippingState(address.getState());
         order.setShippingZipCode(address.getZipCode());
 
-        order.setStatus(OrderStatus.PENDING);
+        order.setPaymentStatus(PaymentStatus.AWAITING_PAYMENT);
            
         order.setShippingPrice(dto.shippingPrice());
         order.setPaymentMethod(PaymentType.valueOf(dto.paymentMethod()));

@@ -27,6 +27,9 @@ import com.example.nexo.entity.user.User;
 
 import lombok.RequiredArgsConstructor;
 
+
+// File responsible for creating DTO of objects
+
 @Component
 @RequiredArgsConstructor
 public class Mapper {
@@ -217,7 +220,7 @@ public class Mapper {
             order.getShippingPrice(),
             order.getDiscountPrice(),
             order.getTotalPrice(),
-            order.getStatus().name(),
+            order.getPaymentStatus().name(),
             order.getPaymentMethod().name(),
             order.getShippingStreet(),
             order.getShippingNumber(),

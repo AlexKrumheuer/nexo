@@ -117,8 +117,7 @@ create table orders(
     discount_price decimal(10,2) not null,
     total_price decimal(19,2) not null,
 
-    `status` varchar(20) default 'PENDING',
-
+    payment_status varchar(20) default 'AWAITING_PAYMENT',
     payment_method varchar(50) not null,
 
     shipping_street varchar(255) not null,
@@ -139,8 +138,13 @@ create table order_items(
     order_id bigint not null,
     product_id bigint not null,
     seller_id bigint not null,
+
     quantity int not null,
     price_at_purchase decimal(19,2) not null,
+
+    shipping_status varchar(20) default 'PENDING_SELLER',
+    tracking_code varchar(100),
+
     foreign key (order_id) references orders(id),
     foreign key (product_id) references products(id),
     foreign key (seller_id) references sellers(id)
