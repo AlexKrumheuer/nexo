@@ -41,6 +41,7 @@ The database was made using MySQL with TIDB Cloud
 
 Users and Authentication
 
+```mermaid
 erDiagram
     users {
         bigint id PK
@@ -89,10 +90,11 @@ erDiagram
 
     users ||--o{ addresses : "possui"
     users ||--o| sellers : "pode ser"
-
+```
 
 Products
 
+```mermaid
 erDiagram
     categories {
         bigint id PK
@@ -143,10 +145,11 @@ erDiagram
     categories ||--o{ products : "contém"
     sellers ||--o{ products : "vende"
     products ||--o{ product_images : "possui"
+```
 
 
 Orders
-
+```mermaid
 erDiagram
     cart {
         bigint id PK
@@ -189,7 +192,7 @@ erDiagram
         varchar tracking_code
     }
 
-    %% Entidades externas resumidas para contexto
+
     users { bigint id PK }
     products { bigint id PK }
     sellers { bigint id PK }
@@ -201,7 +204,7 @@ erDiagram
     orders ||--|{ order_items : "contém"
     products ||--o{ order_items : "é vendido como"
     sellers ||--o{ order_items : "atende"
-
+```
 
 
 Api mapping
