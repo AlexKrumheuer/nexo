@@ -2,7 +2,12 @@ package com.example.nexo.controller.product;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.nexo.dto.product.OrderCreateDTO;
 import com.example.nexo.dto.product.OrderResponseDTO;
+import com.example.nexo.dto.product.ProductResponseDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.service.product.OrderService;
 
@@ -51,6 +57,22 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+
+    @PreAuthorize("hasRole('SELLER')")
+    @GetMapping("/seller")
+    public ResponseEntity<Page<OrderResponseDTO>> getSellerOrders(
+        @RequestParam(required = false) String search,
+        @RequestParam(required = false) Long categoryId,
+        @RequestParam(required = false) Boolean active,
+        @RequestParam(required = false) String stock,
+        @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+        Authentication auth
+    ) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(orderService.findSellerOrders(search, categoryId, active, stock, pageable, user));
+    }
+    
+
     @PostMapping
     public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody @Valid OrderCreateDTO dto, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
@@ -59,4 +81,15 @@ public class OrderController {
 
         return ResponseEntity.ok(order);
     }
+
+    
+
+    @PostMapping("/{orderCode}/pay")
+    public ResponseEntity<OrderResponseDTO> payOrder(@PathVariable String orderCode, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderResponseDTO order = orderService.payOrder(orderCode, user);
+        return ResponseEntity.ok(order);
+    }
+
+    
 }

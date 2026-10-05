@@ -209,6 +209,7 @@ public class Mapper {
                     item.getOrder().getId(),
                     this.MapperProductResponse(item.getProduct()),
                     this.MapperSellerResumedResponse(item.getSeller()),
+                    item.getShippingStatus(),
                     item.getQuantity()
                 ))
                 .toList()

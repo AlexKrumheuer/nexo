@@ -38,6 +38,20 @@ const fetchOrderByStatus = async (status) => {
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 }
+
+
+const payOrder = async (orderId) => {
+    loading.value = true;
+    try {
+        const response = await api.post(`/api/orders/${orderId}/pay`)
+        console.log(response.data)
+        fetchOrders()
+    } catch (error) {
+        console.error(`Error paying order ${orderId}:`, error)
+    } finally {
+        loading.value = false;
+    }
+}
 </script>
 
 <template>
@@ -51,11 +65,9 @@ const formatCurrency = (value) => {
 
             <div class="status-filters">
                 <button :class="{ active: page === 'all' }" @click="fetchOrderByStatus('all')">All</button>
-                <button :class="{ active: page === 'pending' }" @click="fetchOrderByStatus('pending')">Pending</button>
-                <button :class="{ active: page === 'confirmed' }" @click="fetchOrderByStatus('confirmed')">Confirmed</button>
-                <button :class="{ active: page === 'shipped' }" @click="fetchOrderByStatus('shipped')">Shipped</button>
-                <button :class="{ active: page === 'delivered' }"
-                    @click="fetchOrderByStatus('delivered')">Delivered</button>
+                <button :class="{ active: page === 'pending_payment' }" @click="fetchOrderByStatus('awaiting_payment')">Pending Payment</button>
+                <button :class="{ active: page === 'pend' }" @click="fetchOrderByStatus('awaiting_payment')">In Progress</button>
+                <button :class="{ active: page === 'confirmed' }" @click="fetchOrderByStatus('confirmed')">Finished</button>
                 <button :class="{ active: page === 'cancelled' }"
                     @click="fetchOrderByStatus('cancelled')">Cancelled</button>
             </div>
@@ -84,6 +96,7 @@ const formatCurrency = (value) => {
                                         <h4>{{ item.product.title }}</h4>
                                         <p>Shop Name: <strong>{{ item.seller.companyName }}</strong></p>
                                         <span class="item-qty">Qtd: {{ item.quantity }}</span>
+                                        <p v-if="order.status =='PAID'">Shipping Status: {{ item.shippingStatus }}</p>
                                     </div>
                                     <div class="item-price">
                                         R$ {{ formatCurrency(item.product.price) }}
@@ -103,7 +116,7 @@ const formatCurrency = (value) => {
                                     <button class="btn-outline">See Details</button>
                                 </router-link>
                                 <button v-if="order.status === 'PENDING' || order.status === 'SHIPPED' || order.status === 'CONFIRMED'" class="btn-cancel">Cancel Order</button>
-                                <button v-if="order.status === 'PENDING'" class="btn-primary">Pay Now</button>
+                                <button v-if="order.status === 'AWAITING_PAYMENT'" class="btn-primary" @click="payOrder(order.orderCode)">Pay Now</button>
                                 <button v-else-if="order.status === 'SHIPPED'" class="btn-primary">Track Order</button>
                                 <button v-else-if="order.status === 'DELIVERED'" class="btn-primary">Buy Again</button>
         

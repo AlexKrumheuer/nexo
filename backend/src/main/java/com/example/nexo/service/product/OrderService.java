@@ -5,12 +5,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.example.nexo.dto.product.OrderCreateDTO;
 import com.example.nexo.dto.product.OrderItemCreateDTO;
 import com.example.nexo.dto.product.OrderResponseDTO;
+import com.example.nexo.dto.product.ProductResponseDTO;
 import com.example.nexo.entity.order.OrderItem;
 import com.example.nexo.entity.order.PaymentType;
 import com.example.nexo.entity.product.DeliveryStatus;
@@ -26,6 +30,8 @@ import com.example.nexo.repository.order.OrderRepository;
 import com.example.nexo.repository.product.ProductRepository;
 import com.example.nexo.repository.user.AddressRepository;
 import com.example.nexo.repository.user.SellerRepository;
+import com.example.nexo.specification.OrderSellerSpec;
+import com.example.nexo.specification.ProductSpecs;
 import com.example.nexo.util.Mapper;
 
 import jakarta.transaction.Transactional;
@@ -75,6 +81,42 @@ public class OrderService {
         return orders.stream()
                 .map(mapper::MapperOrderResponse)
                 .toList();
+    }
+
+
+
+    @Transactional()
+    public Page<OrderResponseDTO> findSellerOrders(
+            String search,
+            Long categoryId,
+            Boolean active,
+            String stockStatus,
+            Pageable pageable,
+            User user) {
+        Seller seller = sellerRepository.findSellerByUser(user)
+                .orElseThrow(() -> new ProductException("This User is not a Seller", HttpStatus.NOT_FOUND));
+
+        Specification<OrderItem> spec = Specification.where(OrderSellerSpec.belongsToSeller(seller.getId()));
+        // IF FILTERS ARE NOT NULL, THEY ARE ADDED
+        if (search != null && !search.isEmpty()) {
+            spec = spec.and(OrderSellerSpec.hasNameLike(search));
+        }
+
+        if (categoryId != null) {
+            spec = spec.and(OrderSellerSpec.hasCategory(categoryId));
+        }
+
+        if (active != null) {
+            spec = spec.and(OrderSellerSpec.isActive(active));
+        }
+
+        if (stockStatus != null && !stockStatus.isEmpty()) {
+            spec = spec.and(OrderSellerSpec.hasStockStatus(stockStatus));
+        }
+
+        Page<OrderItem> page = orderItemRepository.findAll(spec, pageable);
+
+        return page.map(mapper::MapperOrderResponse);
     }
 
     @Transactional
@@ -149,6 +191,37 @@ public class OrderService {
 
         order.setOrderList(orderItems);
         order.setCreatedAt(LocalDateTime.now());
+
+        return mapper.MapperOrderResponse(order);
+    }
+
+    // Define the Order as PAID and change each item of the order to
+    @Transactional
+    public OrderResponseDTO payOrder(String orderCode, User user) {
+        Order order = orderRepository.findByUserAndOrderCode(user, orderCode)
+                .orElseThrow(() -> new ProductException("Order not found", HttpStatus.NOT_FOUND));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new ProductException("You are not authorized to pay for this order", HttpStatus.FORBIDDEN);
+        }
+
+        if (order.getPaymentStatus() != PaymentStatus.AWAITING_PAYMENT) {
+            throw new ProductException("Order is not awaiting payment", HttpStatus.BAD_REQUEST);
+        }
+
+        for(OrderItem orderItem : order.getOrderList()) {
+            Product product = orderItem.getProduct();
+            if (product.getStockQuantity() < orderItem.getQuantity()) {
+                throw new ProductException("Not enough stock for product: " + product.getTitle(), HttpStatus.BAD_REQUEST);
+            }
+            product.setStockQuantity(product.getStockQuantity() - orderItem.getQuantity());
+            orderItem.setShippingStatus(DeliveryStatus.PENDING_SELLER);
+            productRepository.save(product);
+        }
+
+        // Simulate payment processing
+        order.setPaymentStatus(PaymentStatus.PAID);
+        orderRepository.save(order);
 
         return mapper.MapperOrderResponse(order);
     }

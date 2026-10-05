@@ -1,4 +1,5 @@
 <script>
+// Page to display a loading overlay during asynchronous operations
 </script>
 <template>
   <div>

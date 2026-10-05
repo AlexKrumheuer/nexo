@@ -2,8 +2,8 @@ package com.example.nexo.entity.product;
 
 public enum DeliveryStatus {
 
-    PENDING_SELLER("PENDING_SELLER"),
-    AWAITNG_SHIPMENT("AWAITNG_SHIPMENT"),
+    PENDING_SELLER("PENDING_SELLER"), // Confirmed
+    AWAITNG_SHIPMENT("AWAITNG_SHIPMENT"), // Confirmed
     SHIPPED("SHIPPED"),
     IN_TRANSIT("IN_TRANSIT"),
     DELIVERED("DELIVERED"),

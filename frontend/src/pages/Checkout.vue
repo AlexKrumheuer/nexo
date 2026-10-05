@@ -1,4 +1,5 @@
 <script setup>
+// Page to select address and payment method
 import { ref, computed, onMounted, watch } from 'vue'
 import { useCartStore } from '../services/cartStore'
 import { useToast } from 'vue-toastification'
