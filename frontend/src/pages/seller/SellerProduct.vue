@@ -68,6 +68,10 @@ watch(formFilters, ()=> {
     fetchProducts()
 }, { deep: true })
 
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+}
+
 </script>
 <template>
     <div class="products-page">
@@ -138,7 +142,7 @@ watch(formFilters, ()=> {
                             </div>
                         </td>
                         <td>{{ product.category.name }}</td>
-                        <td class="price">{{product.price}}</td>
+                        <td class="price">{{ formatCurrency(product.price) }}</td>
                         <td>
                             <span v-if="product.categoryId === 1 && product.stockQuantity === 1" class="badge-exclusive">
                                 Last Unity
@@ -328,6 +332,7 @@ td {
 .price {
     font-weight: 600;
     color: #0f172a;
+    font-size: 1rem;
 }
 
 .low-stock {

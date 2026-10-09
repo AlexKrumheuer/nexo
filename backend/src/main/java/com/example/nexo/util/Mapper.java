@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.nexo.dto.order.ResponseCartDTO;
 import com.example.nexo.dto.product.CategoryResponseDTO;
+import com.example.nexo.dto.product.OrderFilteredResponseDTO;
 import com.example.nexo.dto.product.OrderItemResponseDTO;
 import com.example.nexo.dto.product.OrderResponseDTO;
 import com.example.nexo.dto.product.ProductCompleteResponseDTO;
@@ -18,12 +19,14 @@ import com.example.nexo.dto.user.AddressResponseDTO;
 import com.example.nexo.dto.user.UserResponseDTO;
 import com.example.nexo.dto.user.UserResponseDetailedDTO;
 import com.example.nexo.entity.order.Cart;
+import com.example.nexo.entity.order.OrderItem;
 import com.example.nexo.entity.product.Category;
 import com.example.nexo.entity.product.Order;
 import com.example.nexo.entity.product.Product;
 import com.example.nexo.entity.user.Address;
 import com.example.nexo.entity.user.Seller;
 import com.example.nexo.entity.user.User;
+import com.example.nexo.repository.order.OrderItemRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +36,9 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class Mapper {
+    private final OrderItemRepository orderItemRepository;
+
+
     // THIS METHOD IS RESPONSIBLE FOR CREATING A RESPONSE PRODUCT
     // TO FRONTEND
     public ProductResponseDTO MapperProductResponse(Product product) {
@@ -233,6 +239,39 @@ public class Mapper {
             order.getOrderCode(),
             order.getCreatedAt(),
             order.getUpdatedAt()
+        );
+    }
+
+    public OrderFilteredResponseDTO MapperOrderFilteredResponse(OrderItem order) {
+        ProductResponseDTO productDto = this.MapperProductResponse(order.getProduct());
+        SellerResponseDTO sellerDto = this.MapperSellerResponse(this.MapperUserResponse(order.getSeller().getUser()), order.getSeller());
+        UserResponseDTO userDto = this.MapperUserResponse(order.getOrder().getUser());
+        Order orderEntity = order.getOrder();
+
+        return new OrderFilteredResponseDTO(
+            order.getId(),
+            orderEntity.getSubtotal(),
+            orderEntity.getShippingPrice(),
+            orderEntity.getDiscountPrice(),
+            orderEntity.getTotalPrice(),
+            productDto,
+            sellerDto,
+            userDto,
+            orderEntity.getPaymentStatus().name(),
+            orderEntity.getPaymentMethod().name(),
+            orderEntity.getShippingStreet(),
+            orderEntity.getShippingNumber(),
+            orderEntity.getShippingComplement(),
+            orderEntity.getShippingNeighborhood(),
+            orderEntity.getShippingCity(),
+            orderEntity.getShippingState(),
+            orderEntity.getShippingZipCode(),
+            orderEntity.getOrderCode(),
+            order.getTrackingCode(),
+            order.getShippingStatus().name(),
+            order.getQuantity(),
+            orderEntity.getCreatedAt(),
+            orderEntity.getUpdatedAt()
         );
     }
 }

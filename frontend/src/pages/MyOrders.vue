@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import api from '../services/api';
 import LoadingOverlay from './LoadingOverlay.vue';
+
 const orders = ref([])
 const page = ref("all")
 const loading = ref(false)
@@ -15,7 +16,6 @@ const fetchOrders = async () => {
     try {
         const response = await api.get('/api/orders')
         orders.value = response.data
-        console.log(orders.value)
     } catch (error) {
         console.error('Error fetching orders:', error)
     } finally {
@@ -25,29 +25,54 @@ const fetchOrders = async () => {
 
 const fetchOrderByStatus = async (status) => {
     loading.value = true;
+    page.value = status
     try {
         const response = await api.get(`/api/orders/status?status=${status.toUpperCase()}`)
         orders.value = response.data
-        page.value = status
     } catch (error) {
         console.error(`Error fetching ${status} orders:`, error)
     } finally {
         loading.value = false;
     }
 }
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+
+const fetchOrderByDeliveryStatus = async (status) => {
+    loading.value = true;
+    page.value = status
+    try {
+        const response = await api.get(`/api/orders/delivery/status?status=${status.toUpperCase()}`)
+        orders.value = response.data
+    } catch (error) {
+        console.error(`Error fetching ${status} orders:`, error)
+    } finally {
+        loading.value = false;
+    }
 }
 
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0)
+}
 
 const payOrder = async (orderId) => {
     loading.value = true;
     try {
-        const response = await api.post(`/api/orders/${orderId}/pay`)
-        console.log(response.data)
-        fetchOrders()
+        await api.post(`/api/orders/${orderId}/pay`)
+        await fetchOrders()
     } catch (error) {
         console.error(`Error paying order ${orderId}:`, error)
+    } finally {
+        loading.value = false;
+    }
+}
+
+const cancelItem = async (orderId) => {
+    if (!confirm('Are you sure you want to cancel this item?')) return;
+    console.log(orderId)
+    loading.value = true;
+    try {
+        await api.put(`/api/orders/${orderId}/cancel`);
+        await fetchOrders();
+    } catch (error) {
     } finally {
         loading.value = false;
     }
@@ -63,74 +88,111 @@ const payOrder = async (orderId) => {
                 <fa icon="box-open" class="title-icon" /> My Orders
             </h2>
 
+            <!-- Status Filters -->
             <div class="status-filters">
                 <button :class="{ active: page === 'all' }" @click="fetchOrderByStatus('all')">All</button>
-                <button :class="{ active: page === 'pending_payment' }" @click="fetchOrderByStatus('awaiting_payment')">Pending Payment</button>
-                <button :class="{ active: page === 'pend' }" @click="fetchOrderByStatus('awaiting_payment')">In Progress</button>
-                <button :class="{ active: page === 'confirmed' }" @click="fetchOrderByStatus('confirmed')">Finished</button>
-                <button :class="{ active: page === 'cancelled' }"
-                    @click="fetchOrderByStatus('cancelled')">Cancelled</button>
+                <button :class="{ active: page === 'awaiting_payment' }" @click="fetchOrderByStatus('awaiting_payment')">Pending Payment</button>
+                <button :class="{ active: page === 'in_progress' }" @click="fetchOrderByDeliveryStatus('in_progress')">In Progress</button>
+                <button :class="{ active: page === 'confirmed' }" @click="fetchOrderByDeliveryStatus('confirmed')">Finished</button>
+                <button :class="{ active: page === 'cancelled' }" @click="fetchOrderByDeliveryStatus('cancelled')">Cancelled</button>
             </div>
 
+            <!-- Orders List -->
             <div class="orders-list">
-                <div>
-                    <div v-for="order in orders" :key="order.id" class="order-card">
-                        <div class="order-header">
-                            <div class="order-info">
-                                <h3>Order: {{ order.orderCode }}</h3>
-                                <span class="order-date">Placed on {{ new Date(order.createdAt).toDateString('pt-BR')
-                                }}</span>
-                            </div>
-                            <div :class="`order-status status-${order.status.toLowerCase()}`">
-                                {{ order.status }}
-                            </div>
+                <div v-for="order in orders" :key="order.id" class="order-card">
+                    
+                    <!-- Order Header -->
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h3>Order: {{ order.orderCode }}</h3>
+                            <span class="order-date">
+                                Placed on {{ new Date(order.createdAt).toLocaleDateString('pt-BR') }}
+                            </span>
                         </div>
+                        <div :class="`order-status status-${order.status?.toLowerCase()}`">
+                            {{ order.status }}
+                        </div>
+                    </div>
 
-                        <div v-for="item in order.items" :key="item.id" class="order-body">
-                            <router-link :to="`/product/${item.product.slug}`">
-                                <div class="order-item">
-                                    <div class="item-image">
-                                        <img :src="item.product.images[0].url" alt="">
-                                    </div>
-                                    <div class="item-details">
-                                        <h4>{{ item.product.title }}</h4>
-                                        <p>Shop Name: <strong>{{ item.seller.companyName }}</strong></p>
-                                        <span class="item-qty">Qtd: {{ item.quantity }}</span>
-                                        <p v-if="order.status =='PAID'">Shipping Status: {{ item.shippingStatus }}</p>
-                                    </div>
+                    <!-- Order Items -->
+                    <div class="order-body">
+                        <div v-for="item in order.items" :key="item.id" class="order-item-wrapper">
+                            <div class="order-item">
+                                <div class="item-image">
+                                    <img :src="item.product?.images?.[0]?.url" :alt="item.product?.title">
+                                </div>
+                                <div class="item-details">
+                                    <router-link :to="`/product/${item.product?.slug}`" class="item-title-link">
+                                        <h4>{{ item.product?.title }}</h4>
+                                    </router-link>
+                                    <p>Shop Name: <strong>{{ item.seller?.companyName }}</strong></p>
+                                    <span class="item-qty">Qtd: {{ item.quantity }}</span>
+                                </div>
+                                
+                                <div class="item-status-price">
+                                    <span 
+                                        v-if="order.status === 'PAID'" 
+                                        :class="`item-status-badge status-${(item.shippingStatus || 'PENDING').toLowerCase()}`"
+                                    >
+                                        {{ item.shippingStatus || 'PENDING' }}
+                                    </span>
                                     <div class="item-price">
-                                        R$ {{ formatCurrency(item.product.price) }}
+                                        {{ formatCurrency(item.product?.price) }}
                                     </div>
                                 </div>
-                            </router-link>
-
-                        </div>
-
-                        <div class="order-footer">
-                            <div class="order-total">
-                                Shipping: <span>R$ {{ formatCurrency(order.shippingPrice) }}</span><br>
-                                Total: <span>R$ {{ formatCurrency(order.totalPrice) }}</span>
                             </div>
-                            <div class="order-actions">
-                                <router-link :to="`/my-orders/${order.orderCode}`">
-                                    <button class="btn-outline">See Details</button>
-                                </router-link>
-                                <button v-if="order.status === 'PENDING' || order.status === 'SHIPPED' || order.status === 'CONFIRMED'" class="btn-cancel">Cancel Order</button>
-                                <button v-if="order.status === 'AWAITING_PAYMENT'" class="btn-primary" @click="payOrder(order.orderCode)">Pay Now</button>
-                                <button v-else-if="order.status === 'SHIPPED'" class="btn-primary">Track Order</button>
-                                <button v-else-if="order.status === 'DELIVERED'" class="btn-primary">Buy Again</button>
-        
 
+                            <!-- Individual Item Actions -->
+                            <div class="item-actions" v-if="order.status === 'PAID'">
+                                <button 
+                                    v-if="['PENDING_SELLER', 'AWAITING_SHIPMENT'].includes(item.shippingStatus)" 
+                                    class="btn-item-cancel"
+                                    @click="cancelItem(item.order)"
+                                >
+                                    Cancel Item
+                                </button>
 
+                                <button 
+                                    v-if="item.shippingStatus === 'SHIPPED'" 
+                                    class="btn-item-secondary"
+                                >
+                                    Track Item
+                                </button>
+
+                                <button 
+                                    v-if="item.shippingStatus === 'DELIVERED'" 
+                                    class="btn-item-secondary"
+                                >
+                                    Buy Again
+                                </button>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Order Footer -->
+                    <div class="order-footer">
+                        <div class="order-total">
+                            Shipping: <span>{{ formatCurrency(order.shippingPrice) }}</span><br>
+                            Total: <span>{{ formatCurrency(order.totalPrice) }}</span>
+                        </div>
+                        <div class="order-actions">
+                            <router-link :to="`/my-orders/${order.orderCode}`">
+                                <button class="btn-outline">See Details</button>
+                            </router-link>
+                            
+                            <button 
+                                v-if="order.status === 'AWAITING_PAYMENT'" 
+                                class="btn-primary" 
+                                @click="payOrder(order.id || order.orderCode)"
+                            >
+                                Pay Now
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
-
-
-
-
             </div>
+
         </div>
     </div>
 </template>
@@ -233,48 +295,38 @@ const payOrder = async (orderId) => {
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: bold;
+    text-transform: uppercase;
 }
 
-.status-delivered {
-    background-color: #c6f6d5;
-    color: #22543d;
-}
-
-.status-pending {
-    background-color: #feebc8;
-    color: #7b341e;
-}
-
-.status-shipped {
-    background-color: #bee3f8;
-    color: #2a4365;
-}
-
-.status-cancelled {
-    background-color: #fed7d7;
-    color: #742a2a;
-}
-
-.status-confirmed {
-    background-color: #c3dafe;
-    color: #2a4365;
-}
+/* Base Global Order Status Badges */
+.status-delivered, .status-delivered { background-color: #c6f6d5; color: #22543d; }
+.status-pending, .status-awaiting_payment { background-color: #feebc8; color: #7b341e; }
+.status-shipped { background-color: #bee3f8; color: #2a4365; }
+.status-cancelled { background-color: #fed7d7; color: #742a2a; }
+.status-confirmed, .status-paid { background-color: #c3dafe; color: #2a4365; }
 
 .order-body {
     padding: 1.5rem;
+}
+
+.order-item-wrapper {
+    padding: 1rem 0;
+    border-bottom: 1px dashed #eaeaea;
+}
+
+.order-item-wrapper:first-child {
+    padding-top: 0;
+}
+
+.order-item-wrapper:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 .order-item {
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px dashed #eaeaea;
-}
-
-.order-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
 }
 
 .item-image {
@@ -289,11 +341,6 @@ const payOrder = async (orderId) => {
     flex-shrink: 0;
 }
 
-.placeholder-icon {
-    font-size: 2rem;
-    color: #cbd5e0;
-}
-
 .item-image img {
     width: 100%;
     height: 100%;
@@ -304,10 +351,19 @@ const payOrder = async (orderId) => {
     flex-grow: 1;
 }
 
+.item-title-link {
+    text-decoration: none;
+}
+
+.item-title-link:hover h4 {
+    color: #3b7bb9;
+}
+
 .item-details h4 {
     margin: 0 0 0.3rem 0;
     color: #2d3748;
     font-size: 1rem;
+    transition: color 0.2s;
 }
 
 .item-details p {
@@ -322,10 +378,72 @@ const payOrder = async (orderId) => {
     font-weight: 600;
 }
 
+.item-status-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.item-status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Item Specific Shipping Status Badges */
+.item-status-badge.status-pending_seller { background-color: #feebc8; color: #7b341e; }
+.item-status-badge.status-awaiting_shipment { background-color: #feebc8; color: #7b341e; }
+.item-status-badge.status-shipped { background-color: #bee3f8; color: #2a4365; }
+.item-status-badge.status-delivered { background-color: #c6f6d5; color: #22543d; }
+.item-status-badge.status-cancelled { background-color: #fed7d7; color: #742a2a; }
+
 .item-price {
     font-weight: bold;
     color: #1e4770;
     font-size: 1.1rem;
+}
+
+.item-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+}
+
+.btn-item-cancel {
+    background-color: transparent;
+    border: 1px solid #e53e3e;
+    color: #e53e3e;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-item-cancel:hover {
+    background-color: #fee2e2;
+}
+
+.btn-item-secondary {
+    background-color: #f0f6fc;
+    border: 1px solid #3b7bb9;
+    color: #3b7bb9;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-item-secondary:hover {
+    background-color: #3b7bb9;
+    color: #fff;
 }
 
 .order-footer {
@@ -381,22 +499,6 @@ const payOrder = async (orderId) => {
     transition: 0.3s;
 }
 
-.btn-cancel {
-    background-color: #e53e3e;
-    border: none;
-    color: #fff;
-    font-weight: 600;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
-    padding: 0.6rem 1.2rem;
-}
-
-.btn-cancel:hover {
-    background-color: #c53030;
-    transform: translateY(-2px);
-}
-
 .btn-primary:hover {
     background-color: #153250;
     transform: translateY(-2px);
@@ -407,7 +509,6 @@ const payOrder = async (orderId) => {
         opacity: 0;
         transform: translateY(-10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);

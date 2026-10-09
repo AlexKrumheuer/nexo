@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.example.nexo.dto.product.OrderCreateDTO;
+import com.example.nexo.dto.product.OrderFilteredResponseDTO;
 import com.example.nexo.dto.product.OrderItemCreateDTO;
 import com.example.nexo.dto.product.OrderResponseDTO;
 import com.example.nexo.dto.product.ProductResponseDTO;
@@ -83,10 +84,30 @@ public class OrderService {
                 .toList();
     }
 
+    @Transactional 
+    public List<OrderFilteredResponseDTO> getSellerOrdersByDeliveryStatus(User user, String status) {
+        
+        Seller seller = sellerRepository.findSellerByUser(user)
+                .orElseThrow(() -> new ProductException("This User is not a Seller", HttpStatus.NOT_FOUND));
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        if(status.equalsIgnoreCase("in_progress")){
+            orderItems = orderItemRepository.findBySellerAndShippingStatusIn(seller, List.of(DeliveryStatus.PENDING_SELLER, DeliveryStatus.AWAITING_SHIPMENT, DeliveryStatus.SHIPPED));
+        } else if(status.equalsIgnoreCase("confirmed")){
+            orderItems = orderItemRepository.findBySellerAndShippingStatusIn(seller, List.of(DeliveryStatus.DELIVERED));
+        } else if(status.equalsIgnoreCase("cancelled")) {
+            orderItems = orderItemRepository.findBySellerAndShippingStatusIn(seller, List.of(DeliveryStatus.CANCELLED, DeliveryStatus.RETURNED));
+        }
+
+
+        return orderItems.stream()
+                .map(mapper::MapperOrderFilteredResponse)
+                .toList();
+    }
 
 
     @Transactional()
-    public Page<OrderResponseDTO> findSellerOrders(
+    public Page<OrderFilteredResponseDTO> findSellerOrders(
             String search,
             Long categoryId,
             Boolean active,
@@ -116,7 +137,7 @@ public class OrderService {
 
         Page<OrderItem> page = orderItemRepository.findAll(spec, pageable);
 
-        return page.map(mapper::MapperOrderResponse);
+        return page.map(mapper::MapperOrderFilteredResponse);
     }
 
     @Transactional
@@ -224,5 +245,100 @@ public class OrderService {
         orderRepository.save(order);
 
         return mapper.MapperOrderResponse(order);
+    }
+
+    @Transactional 
+    public OrderFilteredResponseDTO acceptOrder(Long orderId, User user) {
+        OrderItem orderItem = orderItemRepository.findById(orderId)
+                .orElseThrow(() -> new ProductException("Order item not found", HttpStatus.NOT_FOUND));
+
+        if (!orderItem.getSeller().getUser().getId().equals(user.getId())) {
+            throw new ProductException("You are not authorized to accept this order", HttpStatus.FORBIDDEN);
+        }
+
+        if (orderItem.getShippingStatus() != DeliveryStatus.PENDING_SELLER) {
+            throw new ProductException("Order item is not pending seller acceptance", HttpStatus.BAD_REQUEST);
+        }
+
+        orderItem.setShippingStatus(DeliveryStatus.AWAITING_SHIPMENT);
+        orderItemRepository.save(orderItem);
+
+        return mapper.MapperOrderFilteredResponse(orderItem);
+    }
+
+    @Transactional 
+    public OrderFilteredResponseDTO declineOrder(Long orderId, User user) {
+        OrderItem orderItem = orderItemRepository.findById(orderId)
+                .orElseThrow(() -> new ProductException("Order item not found", HttpStatus.NOT_FOUND));
+
+        if (!orderItem.getSeller().getUser().getId().equals(user.getId())) {
+            throw new ProductException("You are not authorized to decline this order", HttpStatus.FORBIDDEN);
+        }
+
+        if (orderItem.getShippingStatus() != DeliveryStatus.PENDING_SELLER) {
+            throw new ProductException("Order item is not pending seller acceptance", HttpStatus.BAD_REQUEST);
+        }
+
+        orderItem.setShippingStatus(DeliveryStatus.CANCELLED);
+        orderItemRepository.save(orderItem);
+
+        return mapper.MapperOrderFilteredResponse(orderItem);
+    }
+
+    @Transactional 
+    public OrderFilteredResponseDTO shipOrder(Long orderId, User user) {
+        OrderItem orderItem = orderItemRepository.findById(orderId)
+                .orElseThrow(() -> new ProductException("Order item not found", HttpStatus.NOT_FOUND));
+
+        if (!orderItem.getSeller().getUser().getId().equals(user.getId())) {
+            throw new ProductException("You are not authorized to ship this order", HttpStatus.FORBIDDEN);
+        }
+
+        if (orderItem.getShippingStatus() != DeliveryStatus.AWAITING_SHIPMENT) {
+            throw new ProductException("Order item is not awaiting shipment", HttpStatus.BAD_REQUEST);
+        }
+
+        orderItem.setShippingStatus(DeliveryStatus.SHIPPED);
+        orderItemRepository.save(orderItem);
+
+        return mapper.MapperOrderFilteredResponse(orderItem);
+    }
+
+    @Transactional 
+    public OrderFilteredResponseDTO cancelOrder(Long orderId, User user) {
+        OrderItem orderItem = orderItemRepository.findById(orderId)
+                .orElseThrow(() -> new ProductException("Order item not found", HttpStatus.NOT_FOUND));
+
+        if (!orderItem.getOrder().getUser().getId().equals(user.getId())) {
+            throw new ProductException("You are not authorized to cancel this order", HttpStatus.FORBIDDEN);
+        }
+
+        if (orderItem.getShippingStatus() != DeliveryStatus.DELIVERED && orderItem.getShippingStatus() != DeliveryStatus.CANCELLED && orderItem.getShippingStatus() != DeliveryStatus.RETURNED) {
+            throw new ProductException("Order item cannot be cancelled at this stage", HttpStatus.BAD_REQUEST);
+        }
+
+        orderItem.setShippingStatus(DeliveryStatus.CANCELLED);
+        orderItemRepository.save(orderItem);
+
+        return mapper.MapperOrderFilteredResponse(orderItem);
+    }
+
+    @Transactional 
+    public OrderFilteredResponseDTO returnOrder(Long orderId, User user) {
+        OrderItem orderItem = orderItemRepository.findById(orderId)
+                .orElseThrow(() -> new ProductException("Order item not found", HttpStatus.NOT_FOUND));
+
+        if (!orderItem.getOrder().getUser().getId().equals(user.getId())) {
+            throw new ProductException("You are not authorized to return this order", HttpStatus.FORBIDDEN);
+        }
+
+        if (orderItem.getShippingStatus() != DeliveryStatus.DELIVERED) {
+            throw new ProductException("Order item cannot be returned at this stage", HttpStatus.BAD_REQUEST);
+        }
+
+        orderItem.setShippingStatus(DeliveryStatus.RETURNED);
+        orderItemRepository.save(orderItem);
+
+        return mapper.MapperOrderFilteredResponse(orderItem);
     }
 }

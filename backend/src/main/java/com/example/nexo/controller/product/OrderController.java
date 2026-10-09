@@ -18,13 +18,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.nexo.dto.product.OrderCreateDTO;
+import com.example.nexo.dto.product.OrderFilteredResponseDTO;
 import com.example.nexo.dto.product.OrderResponseDTO;
-import com.example.nexo.dto.product.ProductResponseDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.service.product.OrderService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 
 // Endpoints related to orders
@@ -57,10 +59,17 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+    @GetMapping("/delivery/status")
+    public ResponseEntity<List<OrderFilteredResponseDTO>> getOrdersByDeliveryStatus(@RequestParam String status, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        List<OrderFilteredResponseDTO> orders = orderService.getSellerOrdersByDeliveryStatus(user, status);
+        return ResponseEntity.ok(orders);
+    }
+
 
     @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/seller")
-    public ResponseEntity<Page<OrderResponseDTO>> getSellerOrders(
+    public ResponseEntity<Page<OrderFilteredResponseDTO>> getSellerOrders(
         @RequestParam(required = false) String search,
         @RequestParam(required = false) Long categoryId,
         @RequestParam(required = false) Boolean active,
@@ -91,5 +100,39 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
+    @PutMapping("/seller/{orderId}/accept")
+    public ResponseEntity<OrderFilteredResponseDTO> acceptOrder(@PathVariable Long orderId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderFilteredResponseDTO order = orderService.acceptOrder(orderId, user);
+        return ResponseEntity.ok(order);
+    }
+
+    @PutMapping("/seller/{orderId}/decline")
+    public ResponseEntity<OrderFilteredResponseDTO> declineOrder(@PathVariable Long orderId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderFilteredResponseDTO order = orderService.declineOrder(orderId, user);
+        return ResponseEntity.ok(order);
+    }
+
+    @PutMapping("/seller/{orderId}/ship")
+    public ResponseEntity<OrderFilteredResponseDTO> shipOrder(@PathVariable Long orderId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderFilteredResponseDTO order = orderService.shipOrder(orderId, user);
+        return ResponseEntity.ok(order);
+    }
+
+    @PutMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderFilteredResponseDTO> cancelOrder(@PathVariable Long orderId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderFilteredResponseDTO order = orderService.cancelOrder(orderId, user);
+        return ResponseEntity.ok(order);
+    }
+
+    @PutMapping("/{orderId}/return")
+    public ResponseEntity<OrderFilteredResponseDTO> returnOrder(@PathVariable Long orderId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderFilteredResponseDTO order = orderService.returnOrder(orderId, user);
+        return ResponseEntity.ok(order);
+    }
     
 }
