@@ -60,9 +60,9 @@ public class OrderController {
     }
 
     @GetMapping("/delivery/status")
-    public ResponseEntity<List<OrderFilteredResponseDTO>> getOrdersByDeliveryStatus(@RequestParam String status, Authentication authentication) {
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersByDeliveryStatus(@RequestParam String status, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-        List<OrderFilteredResponseDTO> orders = orderService.getSellerOrdersByDeliveryStatus(user, status);
+        List<OrderResponseDTO> orders = orderService.getSellerOrdersByDeliveryStatus(user, status);
         return ResponseEntity.ok(orders);
     }
 
@@ -107,10 +107,24 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
+    @PutMapping("/seller/{orderId}/delivered")
+    public ResponseEntity<OrderFilteredResponseDTO> markOrderAsDelivered(@PathVariable Long orderId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderFilteredResponseDTO order = orderService.markOrderAsDelivered(orderId, user);
+        return ResponseEntity.ok(order);
+    }
+
     @PutMapping("/seller/{orderId}/decline")
     public ResponseEntity<OrderFilteredResponseDTO> declineOrder(@PathVariable Long orderId, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         OrderFilteredResponseDTO order = orderService.declineOrder(orderId, user);
+        return ResponseEntity.ok(order);
+    }
+
+    @PutMapping("/{orderId}/confirm-delivery")
+    public ResponseEntity<OrderFilteredResponseDTO> confirmDelivery(@PathVariable Long orderId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderFilteredResponseDTO order = orderService.confirmDelivery(orderId, user);
         return ResponseEntity.ok(order);
     }
 

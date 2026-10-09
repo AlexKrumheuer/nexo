@@ -3,6 +3,7 @@ import Pagination from '../admin/Pagination.vue'
 import { onMounted, ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '../../services/api'
+import LoadingOverlay from '../LoadingOverlay.vue'
 
 const toast = useToast()
 
@@ -37,8 +38,9 @@ const fetchSellerOrders = async () => {
             search: searchInput.value
         }
         const response = await api.get("/api/orders/seller", { params })
-        sellerOrders.value = response.data.content
-        console.log(sellerOrders.value)
+        sellerOrders.value = response.data.content || []
+        totalPages.value = response.data.totalPages || 0
+        totalItems.value = response.data.totalElements || 0
     } catch (e) {
         console.error("Error fetching seller orders: " + (e.message || e))
         toast.error("Error fetching seller orders, try reloading the page")
@@ -49,13 +51,11 @@ const fetchSellerOrders = async () => {
 
 const fetchCategories = async () => {
     try {
-        const response = await api.get('/api/categories?size=1000');
-        categories.value = response.data.content.filter(c => c.active)
+        const response = await api.get('/api/categories?size=1000')
+        categories.value = (response.data.content || []).filter(c => c.active)
     } catch (e) {
         console.error("Error getting categories: " + (e.message || e))
         toast.error("Error getting categories, try again later...")
-    } finally {
-        loading.value = true
     }
 }
 
@@ -70,18 +70,23 @@ const closeModal = () => {
 }
 
 const acceptOrder = async (sellerOrder) => {
+    if (!confirm('Are you sure you want to accept this order?')) return
+    loading.value = true
     try {
-        console.log(sellerOrder.id)
         await api.put(`/api/orders/seller/${sellerOrder.id}/accept`)
         toast.success("Order accepted successfully!")
         fetchSellerOrders()
     } catch (e) {
         console.error("Error accepting order: " + (e.message || e))
         toast.error("Error accepting order, try again later...")
+    } finally {
+        loading.value = false
     }
 }
 
 const declineOrder = async (sellerOrder) => {
+    if (!confirm('Are you sure you want to decline this order?')) return
+    loading.value = true
     try {
         await api.put(`/api/orders/seller/${sellerOrder.id}/decline`)
         toast.success("Order declined successfully!")
@@ -89,10 +94,14 @@ const declineOrder = async (sellerOrder) => {
     } catch (e) {
         console.error("Error declining order: " + (e.message || e))
         toast.error("Error declining order, try again later...")
+    } finally {
+        loading.value = false
     }
 }
 
 const shipOrder = async (sellerOrder) => {
+    if (!confirm('Are you sure you want to mark this item as shipped?')) return
+    loading.value = true
     try {
         await api.put(`/api/orders/seller/${sellerOrder.id}/ship`)
         toast.success("Order marked as shipped successfully!")
@@ -100,7 +109,35 @@ const shipOrder = async (sellerOrder) => {
     } catch (e) {
         console.error("Error marking order as shipped: " + (e.message || e))
         toast.error("Error marking order as shipped, try again later...")
+    } finally {
+        loading.value = false
     }
+}
+
+const markAsDelivered = async (sellerOrder) => {
+    if (!confirm('Are you sure you want to mark this item as delivered?')) return
+    loading.value = true
+    try {
+        await api.put(`/api/orders/seller/${sellerOrder.id}/delivered`)
+        toast.success("Order marked as delivered successfully!")
+        fetchSellerOrders()
+    } catch (e) {
+        console.error("Error marking order as delivered: " + (e.message || e))
+        toast.error("Error marking order as delivered, try again later...")
+    } finally {
+        loading.value = false
+    }
+}
+
+const changePage = (newPage) => {
+    currentPage.value = newPage
+    fetchSellerOrders()
+}
+
+const changeSize = (newSize) => {
+    size.value = newSize
+    currentPage.value = 0
+    fetchSellerOrders()
 }
 
 onMounted(() => {
@@ -114,19 +151,20 @@ watch(formFilters, () => {
 }, { deep: true })
 
 const formatCurrency = (value) => {
-    if (value === undefined || value === null) return 'R$ 0,00'
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+    if (value === undefined || value === null) return '$0.00'
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 }
 
 const formatDate = (dateString) => {
     if (!dateString) return ''
-    return new Date(dateString).toLocaleDateString('US', {
+    return new Date(dateString).toLocaleDateString('en-US', {
         day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
     })
 }
 </script>
 
 <template>
+    <loading-overlay v-if="loading"></loading-overlay>
     <div class="products-page">
         <div class="page-header">
             <div class="titles">
@@ -138,29 +176,27 @@ const formatDate = (dateString) => {
         <div class="toolbar">
             <div class="search-box">
                 <fa icon="search" class="search-icon-seller" />
-                <input type="text" placeholder="Search for product name..." v-model="searchInput" />
+                <input type="text" placeholder="Search for product name..." v-model="searchInput" @keyup.enter="fetchSellerOrders" />
             </div>
             <div>
                 <select v-model="formFilters.categoryId">
-                    <option :value="null" disabled selected>Select a category to filter</option>
+                    <option :value="null">All Categories</option>
                     <option :value="category.id" v-for="category in categories" :key="category.id">{{ category.name }}</option>
                 </select>
             </div>
             <div>
                 <select v-model="formFilters.active">
-                    <option :value="null" disabled selected>Filter by product status</option>
+                    <option :value="null">All Product Status</option>
                     <option :value="true">Active</option>
                     <option :value="false">Inactive</option>
-                    <option :value="null">Both</option>
                 </select>
             </div>
             <div>
                 <select v-model="formFilters.stock">
-                    <option :value="null" disabled selected>Filter by product stock</option>
+                    <option :value="null">All Stock Status</option>
                     <option :value="'IN_STOCK'">In Stock</option>
                     <option :value="'LOW_STOCK'">Low Stock</option>
                     <option :value="'OUT_OF_STOCK'">Out of Stock</option>
-                    <option :value="null">All Stock Status</option>
                 </select>
             </div>
         </div>
@@ -199,7 +235,7 @@ const formatDate = (dateString) => {
                         </th>
                         <th class="text-center">
                             <div class="th-content center">
-                                QNT <fa icon="angle-down" />
+                                Qty <fa icon="angle-down" />
                             </div>
                         </th>
                         <th width="140" class="text-center">Actions</th>
@@ -215,50 +251,53 @@ const formatDate = (dateString) => {
                         </td>
                         <td class="text-center">
                             <div class="img-wrapper">
-                                <img :src="sellerOrder.product.images[0]?.url" alt="Product Image" />
+                                <img v-if="sellerOrder.product?.images?.[0]?.url" :src="sellerOrder.product.images[0].url" alt="Product Image" />
+                                <fa v-else icon="image" class="placeholder-icon" />
                             </div>
                         </td>
                         <td>
                             <div class="product-info">
-                                <span class="name">{{ sellerOrder.product.title }}</span>
-                                <span class="sku">{{ sellerOrder.product.sku }}</span>
+                                <span class="name">{{ sellerOrder.product?.title }}</span>
+                                <span class="sku">{{ sellerOrder.product?.sku }}</span>
                             </div>
                         </td>
-                        <td>{{ sellerOrder.product.category?.name }}</td>
-                        <td class="price text-right">{{ formatCurrency(sellerOrder.product.price) }}</td>
+                        <td>{{ sellerOrder.product?.category?.name || 'N/A' }}</td>
+                        <td class="price text-right">{{ formatCurrency(sellerOrder.product?.price) }}</td>
                         <td>
-                            <span v-if="sellerOrder.product.categoryId === 1 && sellerOrder.product.stockQuantity === 1"
-                                class="badge-exclusive">
-                                Last Unity
+                            <span v-if="sellerOrder.product?.categoryId === 1 && sellerOrder.product?.stockQuantity === 1" class="badge-exclusive">
+                                Last Unit
                             </span>
-
-                            <span v-else-if="sellerOrder.product.stockQuantity <= 5" class="low-stock">
-                                {{ sellerOrder.product.stockQuantity }} uni. (low)
+                            <span v-else-if="sellerOrder.product?.stockQuantity <= 5" class="low-stock">
+                                {{ sellerOrder.product?.stockQuantity }} units (low)
                             </span>
-
                             <span v-else>
-                                {{ sellerOrder.product.stockQuantity }} uni.
+                                {{ sellerOrder.product?.stockQuantity }} units
                             </span>
                         </td>
                         <td class="text-center">
-                            <span  class="status-badge active">{{ sellerOrder.shippingStatus === 'PENDING_SELLER' ? sellerOrder.status : sellerOrder.shippingStatus }}</span>
+                            <span :class="`status-badge status-${(sellerOrder.shippingStatus || sellerOrder.status || '').toLowerCase()}`">
+                                {{ sellerOrder.shippingStatus === 'PENDING_SELLER' ? sellerOrder.status : sellerOrder.shippingStatus }}
+                            </span>
                         </td>
                         <td class="text-center">
-                            <span>{{ sellerOrder.quantity }} item</span>
+                            <span>{{ sellerOrder.quantity }} unit(s)</span>
                         </td>
                         <td class="text-center">
                             <div class="actions">
                                 <button class="action-btn view" title="Customer & Order Details" @click="viewOrderDetails(sellerOrder)">
                                     <fa icon="eye" />
                                 </button>
-                                <button v-if="sellerOrder.status == 'PAID' && sellerOrder.shippingStatus == 'PENDING_SELLER'" class="action-btn edit" title="Accept order" @click="acceptOrder(sellerOrder)">
+                                <button v-if="sellerOrder.status === 'PAID' && sellerOrder.shippingStatus === 'PENDING_SELLER'" class="action-btn edit" title="Accept order" @click="acceptOrder(sellerOrder)">
                                     <fa icon="check" />
                                 </button>
-                                <button v-else-if="sellerOrder.shippingStatus == 'AWAITING_SHIPMENT'" class="action-btn edit" title="SHIP ORDER" @click="shipOrder(sellerOrder)">
+                                <button v-else-if="sellerOrder.shippingStatus === 'AWAITING_SHIPMENT'" class="action-btn edit" title="Ship order" @click="shipOrder(sellerOrder)">
                                     <fa icon="truck" />
                                 </button>        
-                                <button v-if="sellerOrder.shippingStatus == AWAITING_SHIPMENT || sellerOrder.shippingStatus == PENDING_SELLER" class="action-btn delete" title="Decline order" @click="declineOrder(sellerOrder)">
+                                <button v-if="['AWAITING_SHIPMENT', 'PENDING_SELLER'].includes(sellerOrder.shippingStatus)" class="action-btn delete" title="Decline order" @click="declineOrder(sellerOrder)">
                                     <fa icon="times" />
+                                </button>
+                                <button v-if="sellerOrder.shippingStatus === 'SHIPPED'" class="action-btn mark_as_delivered" title="Mark as Delivered" @click="markAsDelivered(sellerOrder)">
+                                    <fa icon="truck-ramp-box" />
                                 </button>
                             </div>
                         </td>
@@ -284,7 +323,7 @@ const formatDate = (dateString) => {
                     <div class="info-card-grid">
                         <div class="info-item">
                             <span class="label">Name</span>
-                            <span class="value">{{ selectedOrder.user?.username ||  'N/A' }}</span>
+                            <span class="value">{{ selectedOrder.user?.username || selectedOrder.user?.name || 'N/A' }}</span>
                         </div>
                         <div class="info-item">
                             <span class="label">Email</span>
@@ -297,33 +336,33 @@ const formatDate = (dateString) => {
                     <h3><fa icon="map-marker-alt" class="section-icon" /> Shipping Address</h3>
                     <div class="address-card">
                         <p class="address-line">
-                            <strong>{{ selectedOrder.shippingStreet || 'Main Street' }}</strong>, 
-                            {{ selectedOrder.shippingNumber || '123' }}
-                            <span v-if="selectedOrder.shippingComplement"> - {{ selectedOrder.shippingComplement }}</span>
+                            <strong>{{ selectedOrder.shippingStreet || 'N/A' }}</strong>, 
+                            {{ selectedOrder.shippingNumber || 'N/A' }}
+                            <span v-if="selectedOrder.shippingComplement"> — {{ selectedOrder.shippingComplement }}</span>
                         </p>
                         <p class="address-subline">
-                            {{ selectedOrder.shippingNeighborhood || 'District' }} — 
-                            {{ selectedOrder.shippingCity || 'City' }} / {{ selectedOrder.shippingState || 'ST' }}
+                            {{ selectedOrder.shippingNeighborhood || 'N/A' }} — 
+                            {{ selectedOrder.shippingCity || 'N/A' }} / {{ selectedOrder.shippingState || 'ST' }}
                         </p>
-                        <span class="cep-badge">CEP: {{ selectedOrder.shippingZipCode || '00000-000' }}</span>
+                        <span class="cep-badge">Zip Code: {{ selectedOrder.shippingZipCode || 'N/A' }}</span>
                     </div>
                 </div>
 
                 <div class="modal-section">
                     <h3><fa icon="box" class="section-icon" /> Purchased Item</h3>
                     <div class="product-item-row">
-                        <img :src="selectedOrder.product.images[0]?.url" alt="Product" class="item-img" />
+                        <img v-if="selectedOrder.product?.images?.[0]?.url" :src="selectedOrder.product.images[0].url" alt="Product" class="item-img" />
+                        <fa v-else icon="image" class="placeholder-icon" />
                         <div class="item-info">
-                            <span class="item-title">{{ selectedOrder.product.title }}</span>
-                            <span class="item-meta">SKU: {{ selectedOrder.product.sku }} | Qty: <strong>{{ selectedOrder.quantity }}</strong></span>
+                            <span class="item-title">{{ selectedOrder.product?.title }}</span>
+                            <span class="item-meta">SKU: {{ selectedOrder.product?.sku }} | Qty: <strong>{{ selectedOrder.quantity }}</strong></span>
                         </div>
                         <div class="item-price">
-                            {{ formatCurrency(selectedOrder.product.price * selectedOrder.quantity) }}
+                            {{ formatCurrency((selectedOrder.product?.price || 0) * selectedOrder.quantity) }}
                         </div>
                     </div>
                 </div>
 
-                <!-- Summary -->
                 <div class="summary-footer-box">
                     <div class="summary-col">
                         <span class="summary-label">Order Date</span>
@@ -331,11 +370,13 @@ const formatDate = (dateString) => {
                     </div>
                     <div class="summary-col">
                         <span class="summary-label">Status</span>
-                        <span class="status-badge active">{{ selectedOrder.status }}</span>
+                        <span :class="`status-badge status-${(selectedOrder.shippingStatus || selectedOrder.status || '').toLowerCase()}`">
+                            {{ selectedOrder.shippingStatus || selectedOrder.status }}
+                        </span>
                     </div>
                     <div class="summary-col text-right">
                         <span class="summary-label">Total Amount</span>
-                        <span class="total-price-large">{{ formatCurrency(selectedOrder.product.price * selectedOrder.quantity) }}</span>
+                        <span class="total-price-large">{{ formatCurrency((selectedOrder.product?.price || 0) * selectedOrder.quantity) }}</span>
                     </div>
                 </div>
             </div>
@@ -380,11 +421,13 @@ const formatDate = (dateString) => {
 .toolbar {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .search-box {
     position: relative;
     flex: 1;
+    min-width: 250px;
     max-width: 400px;
 }
 
@@ -414,16 +457,14 @@ const formatDate = (dateString) => {
     background: white;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
+    overflow-x: auto;
     border: 1px solid #e2e8f0;
-    
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
     min-width: 1000px;
-    border-collapse: collpase;
 }
 
 thead {
@@ -481,6 +522,7 @@ td {
 .text-right {
     text-align: right;
 }
+
 .first-row {
     display: flex;
     flex-direction: column;
@@ -499,6 +541,11 @@ td {
     border-radius: 6px;
     object-fit: cover;
     border: 1px solid #e2e8f0;
+}
+
+.placeholder-icon {
+    color: #94a3b8;
+    font-size: 1.5rem;
 }
 
 .product-info {
@@ -523,6 +570,15 @@ td {
     font-size: 1rem;
 }
 
+.badge-exclusive {
+    background-color: #fef3c7;
+    color: #92400e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
 .low-stock {
     color: #dc2626;
     font-weight: bold;
@@ -534,11 +590,37 @@ td {
     font-size: 0.75rem;
     font-weight: 600;
     display: inline-block;
+    text-transform: uppercase;
 }
 
-.status-badge.active {
-    background-color: #dcfce7;
-    color: #166534;
+.status-pending,
+.status-awaiting_payment,
+.status-pending_seller,
+.status-awaiting_shipment {
+    background-color: #feebc8;
+    color: #7b341e;
+    border: 1px solid #fbd38d;
+}
+
+.status-shipped {
+    background-color: #bee3f8;
+    color: #2a4365;
+    border: 1px solid #90cdf4;
+}
+
+.status-paid,
+.status-delivered,
+.status-finished {
+    background-color: #c6f6d5;
+    color: #22543d;
+    border: 1px solid #9ae6b4;
+}
+
+.status-cancelled,
+.status-returned {
+    background-color: #fed7d7;
+    color: #742a2a;
+    border: 1px solid #feb2b2;
 }
 
 .actions {
@@ -587,6 +669,15 @@ td {
     background-color: #fecaca;
 }
 
+.action-btn.mark_as_delivered {
+    background-color: #d1fae5;
+    color: #059669;
+}
+
+.action-btn.mark_as_delivered:hover {
+    background-color: #a7f3d0;
+}
+
 input, select, textarea {
     padding: 10px 12px;
     border: 1px solid #cbd5e1;
@@ -598,7 +689,6 @@ input, select, textarea {
     transition: border 0.2s;
 }
 
-/* Modal Estilos para Dados do Cliente */
 .modal-backdrop {
     position: fixed;
     top: 0;

@@ -213,6 +213,7 @@ public class Mapper {
             ? order.getOrderList().stream()
                 .map(item -> new OrderItemResponseDTO(
                     item.getOrder().getId(),
+                    item.getId(),
                     this.MapperProductResponse(item.getProduct()),
                     this.MapperSellerResumedResponse(item.getSeller()),
                     item.getShippingStatus(),
