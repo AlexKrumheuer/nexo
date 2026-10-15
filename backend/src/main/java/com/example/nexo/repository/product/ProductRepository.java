@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import com.example.nexo.entity.product.Product;
+import com.example.nexo.entity.user.Seller;
 
 public interface ProductRepository extends JpaRepository<Product, Long>,
                                            JpaSpecificationExecutor<Product> // CLASS TO CREATE DINAMIC SQL QUERIES 
@@ -22,4 +23,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     List<Product> findRandomProducts();
     List<Product> findTop10ByOrderByIdDesc();
     Page<Product> findAll(Pageable pageable);
+    Integer countBySellerAndStockQuantityLessThanEqual(Seller seller, Integer stockQuantity);
+    Integer countBySeller(Seller seller);
 }

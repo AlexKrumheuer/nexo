@@ -88,6 +88,17 @@ const showingEnd = computed(() => Math.min((props.page + 1) * props.size, props.
     </div>
 </template>
 <style scoped>
+.pagination-area {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
 .pagination-size {
     display: flex;
     align-items: center;
@@ -122,5 +133,62 @@ const showingEnd = computed(() => Math.min((props.page + 1) * props.size, props.
     outline: none;
     border-color: #367cc1; 
     box-shadow: 0 0 0 3px rgba(54, 124, 193, 0.15); 
+}
+
+.pagination-info {
+    color: #6b7280;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.pagination-info .highlight {
+    color: #111827;
+    font-weight: 700;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-btn:hover:not(.active):not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+    color: #111827;
+}
+
+.pagination-btn.active {
+    background-color: #0369a1;
+    border-color: #0369a1;
+    color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(3, 105, 161, 0.3);
+}
+
+.pagination-btn:disabled,
+.pagination-btn.disabled {
+    background-color: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../services/api'
 
@@ -20,12 +20,61 @@ const fetchOrderDetails = async () => {
         const response = await api.get(`/api/orders/${orderCode}`)
         order.value = response.data
     } catch (error) {
-        console.error('Error searching for product details:', error)
+        console.error('Error searching for order details:', error)
         router.push('/my-orders') 
     } finally {
         loading.value = false
     }
 }
+
+const confirmItemDelivery = async (itemId) => {
+    if (!confirm('Do you confirm that you received this item in perfect condition?')) return
+
+    try {
+        loading.value = true
+        await api.put(`/api/orders/${itemId}/confirm-delivery`)
+        await fetchOrderDetails()
+    } catch (error) {
+        console.error('Error confirming item delivery:', error)
+    } finally {
+        loading.value = false
+    }
+}
+
+const orderItems = computed(() => {
+    return order.value?.orderList || order.value?.items || []
+})
+
+const deliveredItems = computed(() => {
+    return orderItems.value.filter(i => ['DELIVERED', 'FINISHED'].includes(i.shippingStatus))
+})
+
+const cancelledItems = computed(() => {
+    return orderItems.value.filter(i => i.shippingStatus === 'CANCELLED')
+})
+
+const orderDeliverySummary = computed(() => {
+    const total = orderItems.value.length
+    if (!total) return { text: order.value?.paymentStatus || 'PENDING', class: 'status-pending' }
+
+    const deliveredCount = deliveredItems.value.length
+    const cancelledCount = cancelledItems.value.length
+
+    if (cancelledCount === total) {
+        return { text: 'Cancelled', class: 'status-cancelled' }
+    }
+    if (deliveredCount === total) {
+        return { text: 'Delivered', class: 'status-delivered' }
+    }
+    if (deliveredCount + cancelledCount === total && deliveredCount > 0) {
+        return { text: 'Partially Delivered', class: 'status-partial' }
+    }
+    if (orderItems.value.some(i => i.shippingStatus === 'SHIPPED')) {
+        return { text: 'In Transit', class: 'status-shipped' }
+    }
+    console.log(order.value)
+    return { text: order.value?.status === 'PAID' ? 'Paid' : 'Pending Payment', class: order.value?.status === 'PAID' ? 'status-paid' : 'status-awaiting_payment' }
+})
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0)
@@ -56,76 +105,92 @@ const goBack = () => {
             <div class="detail-card main-summary">
                 <div class="summary-info">
                     <h2>Order Details #{{ order.orderCode }}</h2>
-                    <p class="order-date">Ordered in {{ formatDate(order.createdAt) }}</p>
+                    <p class="order-date">Ordered on {{ formatDate(order.createdAt) }}</p>
                 </div>
-                <div :class="`order-status status-${order.status.toLowerCase()}`">
-                    {{ order.status }}
+                <div :class="`order-status ${orderDeliverySummary.class}`">
+                    {{ orderDeliverySummary.text }}
                 </div>
             </div>
 
+            <div v-if="deliveredItems.length > 0 && cancelledItems.length > 0" class="alert-partial-order">
+                <fa icon="info-circle" />
+                <span>
+                    This order contains <strong>{{ deliveredItems.length }} delivered item(s)</strong> and 
+                    <strong>{{ cancelledItems.length }} cancelled item(s)</strong>.
+                </span>
+            </div>
+
             <div class="details-grid">
+                
                 <div class="left-column">
                     
-                    <div class="detail-card tracking-card">
-                        <h3><fa icon="truck" /> Delivery Status</h3>
-                        <p class="tracking-code">Tracking Code: <strong>BR987654321NX</strong></p>
-                        
-                        <div class="timeline">
-                            <div class="timeline-item" :class="{ completed: order.status !== 'CANCELLED' }">
-                                <div class="timeline-dot"></div>
-                                <div class="timeline-content">
-                                    <h4>Order Placed</h4>
-                                    <span>{{ formatDate(order.createdAt) }}</span>
-                                </div>
-                            </div>
-                            <div class="timeline-item" :class=" { completed: order.status == 'CONFIRMED' || order.status == 'SHIPPED' || order.status == 'DELIVERED' }">
-                                <div class="timeline-dot"></div>
-                                <div class="timeline-content">
-                                    <h4>Payment Approved</h4>
-                                    <span>The system confirmed the payment.</span>
-                                </div>
-                            </div>
-                            <div class="timeline-item" :class="{ completed: order.status === 'SHIPPED' || order.status === 'DELIVERED' }">
-                                <div class="timeline-dot"></div>
-                                <div class="timeline-content">
-                                    <h4>Order Shipped</h4>
-                                    <span>The package is with the carrier.</span>
-                                </div>
-                            </div>
-                            <div class="timeline-item" :class="{ completed: order.status === 'DELIVERED' }">
-                                <div class="timeline-dot"></div>
-                                <div class="timeline-content">
-                                    <h4>Delivered</h4>
-                                    <span>The package was delivered to the recipient.</span>
-                                </div>
-                            </div>
-                            <div v-if="order.status == 'CANCELLED'" class="timeline-item" :class="{ completed: order.status === 'CANCELLED' }">
-                                <div class="timeline-dot-cancelled"></div>
-                                <div class="timeline-content">
-                                    <h4>Cancelled</h4>
-                                    <span>The order was cancelled.</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="detail-card items-card">
-                        <h3><fa icon="box" /> Products</h3>
-                        <div v-for="item in order.items" :key="item.id" class="order-item">
-                            <div class="item-image">
-                                <img v-if="item.product.images?.length" :src="item.product.images[0].url" alt="">
-                                <fa v-else icon="image" class="placeholder-icon" />
+                        <h3><fa icon="box" /> Order Products & Shipping Status</h3>
+                        
+                        <div v-for="item in orderItems" :key="item.id" class="order-item-card">
+                            
+                            <div class="order-item-header">
+                                <div class="item-image">
+                                    <img v-if="item.product?.images?.length" :src="item.product.images[0].url" alt="Product Image">
+                                    <fa v-else icon="image" class="placeholder-icon" />
+                                </div>
+                                <div class="item-details">
+                                    <router-link :to="`/product/${item.product?.slug}`" class="product-link">
+                                        <h4>{{ item.product?.title }}</h4>
+                                    </router-link>
+                                    <p>Seller: <strong>{{ item.seller?.companyName || 'Nexo Marketplace' }}</strong></p>
+                                    <span class="item-qty">Quantity: {{ item.quantity }}</span>
+                                    
+                                    <p v-if="item.trackingCode" class="tracking-subtext">
+                                        Tracking: <strong>{{ item.trackingCode }}</strong>
+                                    </p>
+                                </div>
+
+                                <div class="item-price-status">
+                                    <span :class="`item-status-badge status-${(item.shippingStatus || 'PENDING_SELLER').toLowerCase()}`">
+                                        {{ item.shippingStatus || 'PENDING_SELLER' }}
+                                    </span>
+                                    <div class="item-price">
+                                        {{ formatCurrency(item.priceAtPurchase || item.product?.price) }}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="item-details">
-                                <router-link :to="`/product/${item.product.slug}`" class="product-link">
-                                    <h4>{{ item.product.title }}</h4>
-                                </router-link>
-                                <p>Seller: <strong>{{ item.seller?.companyName || 'Nexo' }}</strong></p>
-                                <span class="item-qty">Quantity: {{ item.quantity }}</span>
+
+                            <div class="item-delivery-timeline" v-if="!['CANCELLED', 'RETURNED'].includes(item.shippingStatus)">
+                                <div class="mini-timeline">
+                                    <div class="step active">
+                                        <div class="dot"></div>
+                                        <span>Order Placed</span>
+                                    </div>
+                                    <div class="step" :class="{ active: ['PENDING_SELLER', 'AWAITING_SHIPMENT', 'SHIPPED', 'DELIVERED', 'FINISHED'].includes(item.shippingStatus) }">
+                                        <div class="dot"></div>
+                                        <span>Preparing</span>
+                                    </div>
+                                    <div class="step" :class="{ active: ['SHIPPED', 'DELIVERED', 'FINISHED'].includes(item.shippingStatus) }">
+                                        <div class="dot"></div>
+                                        <span>In Transit</span>
+                                    </div>
+                                    <div class="step" :class="{ active: ['DELIVERED', 'FINISHED'].includes(item.shippingStatus) }">
+                                        <div class="dot"></div>
+                                        <span>Delivered</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="item-price">
-                                {{ formatCurrency(item.product.price) }}
+
+                            <div v-else-if="item.shippingStatus === 'CANCELLED'" class="cancelled-item-banner">
+                                <fa icon="times-circle" /> This item was cancelled.
                             </div>
+
+                            <div v-else-if="item.shippingStatus === 'RETURNED'" class="returned-item-banner">
+                                <fa icon="undo" /> This item was returned.
+                            </div>
+
+                            <div class="item-actions" v-if="item.shippingStatus === 'DELIVERED'">
+                                <button class="btn-confirm-item" @click="confirmItemDelivery(item.itemId || item.id)">
+                                    <fa icon="circle-check" /> Confirm Delivery for this Item
+                                </button>
+                            </div>
+
                         </div>
                     </div>
 
@@ -148,7 +213,7 @@ const goBack = () => {
                         
                         <div class="financial-row">
                             <span>Subtotal:</span>
-                            <span>{{ formatCurrency(order.totalPrice - order.shippingPrice) }}</span>
+                            <span>{{ formatCurrency(order.subtotal || (order.totalPrice - order.shippingPrice)) }}</span>
                         </div>
                         <div class="financial-row">
                             <span>Shipping:</span>
@@ -162,14 +227,12 @@ const goBack = () => {
                         <div class="payment-method mt-3">
                             <p><strong>Payment Method:</strong> {{ order.paymentMethod }}</p>
                         </div>
-
                     </div>
 
                     <div class="detail-card support-card">
                         <h3>Need help?</h3>
                         <p>Did you have any issues with this order?</p>
                         <button class="btn-outline-full mt-2">Contact Support</button>
-                        <button v-if="order.status === 'DELIVERED'" class="btn-cancel-full mt-2">Request Return</button>
                     </div>
 
                 </div>
@@ -196,7 +259,6 @@ const goBack = () => {
     animation: fadeIn 0.4s ease-in-out;
 }
 
-/* Navegação */
 .header-navigation {
     margin-bottom: 1.5rem;
 }
@@ -218,7 +280,6 @@ const goBack = () => {
     color: #1e4770;
 }
 
-/* Cards Genéricos */
 .detail-card {
     background-color: #fff;
     border-radius: 12px;
@@ -239,7 +300,6 @@ const goBack = () => {
     padding-bottom: 0.5rem;
 }
 
-/* Summary Header */
 .main-summary {
     display: flex;
     justify-content: space-between;
@@ -257,121 +317,118 @@ const goBack = () => {
     margin: 0;
 }
 
-/* Status Colors */
+.order-status, .item-status-badge {
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
 .order-status {
     padding: 0.5rem 1.2rem;
     border-radius: 20px;
     font-size: 0.9rem;
-    font-weight: bold;
 }
-.status-delivered { background-color: #c6f6d5; color: #22543d; }
-.status-pending { background-color: #feebc8; color: #7b341e; }
-.status-shipped { background-color: #bee3f8; color: #2a4365; }
-.status-cancelled { background-color: #fed7d7; color: #742a2a; }
 
-/* Grid de Layout */
+.item-status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+.status-pending,
+.status-awaiting_payment,
+.status-pending_seller,
+.status-awaiting_shipment,
+.item-status-badge.status-pending,
+.item-status-badge.status-awaiting_payment,
+.item-status-badge.status-pending_seller,
+.item-status-badge.status-awaiting_shipment {
+    background-color: #feebc8;
+    color: #7b341e;
+    border: 1px solid #fbd38d;
+}
+
+.status-shipped,
+.item-status-badge.status-shipped {
+    background-color: #bee3f8;
+    color: #2a4365;
+    border: 1px solid #90cdf4;
+}
+
+.status-paid,
+.status-delivered,
+.status-finished,
+.item-status-badge.status-paid,
+.item-status-badge.status-delivered,
+.item-status-badge.status-finished {
+    background-color: #c6f6d5;
+    color: #22543d;
+    border: 1px solid #9ae6b4;
+}
+
+.status-cancelled,
+.status-returned,
+.item-status-badge.status-cancelled,
+.item-status-badge.status-returned {
+    background-color: #fed7d7;
+    color: #742a2a;
+    border: 1px solid #feb2b2;
+}
+
+.status-partial {
+    background-color: #e2e8f0;
+    color: #2d3748;
+    border: 1px solid #cbd5e0;
+}
+
+.alert-partial-order {
+    background-color: #ebf8ff;
+    border-left: 4px solid #3182ce;
+    color: #2b6cb0;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.95rem;
+}
+
 .details-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 1.5rem;
 }
 
-/* Linha do Tempo (Timeline) */
-.tracking-code {
-    font-size: 0.95rem;
-    color: #4a5568;
-    margin-bottom: 1.5rem;
+.order-item-card {
+    background: #fcfcfc;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin-bottom: 1.2rem;
 }
 
-.timeline {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding-left: 0.5rem;
+.order-item-card:last-child {
+    margin-bottom: 0;
 }
 
-.timeline-item {
-    display: flex;
-    gap: 1rem;
-    position: relative;
-    opacity: 0.5;
-}
-
-.timeline-item.completed {
-    opacity: 1;
-}
-
-.timeline-dot {
-    width: 14px;
-    height: 14px;
-    background-color: #cbd5e0;
-    border-radius: 50%;
-    position: relative;
-    z-index: 2;
-    margin-top: 5px;
-}
-
-.timeline-dot-cancelled {
-    width: 14px;
-    height: 14px;
-    background-color: #c53030;
-    border-radius: 50%;
-    position: relative;
-    z-index: 2;
-    margin-top: 5px;
-}
-
-.timeline-item.completed .timeline-dot {
-    background-color: #3b7bb9;
-    box-shadow: 0 0 0 4px rgba(59, 123, 185, 0.2);
-}
-
-/* Linha conectando os pontos */
-.timeline-item:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: 6px;
-    top: 20px;
-    bottom: -15px;
-    width: 2px;
-    background-color: #eaeaea;
-    z-index: 1;
-}
-.timeline-item.completed:not(:last-child)::after {
-    background-color: #3b7bb9;
-}
-
-.timeline-content h4 {
-    margin: 0;
-    font-size: 0.95rem;
-    color: #2d3748;
-}
-
-.timeline-content span {
-    font-size: 0.8rem;
-    color: #718096;
-}
-
-/* Itens do Pedido */
-.order-item {
+.order-item-header {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px dashed #eaeaea;
-    margin-bottom: 1rem;
-}
-.order-item:last-child {
-    border-bottom: none; margin-bottom: 0; padding-bottom: 0;
 }
 
 .item-image {
-    width: 60px; height: 60px;
+    width: 65px;
+    height: 65px;
     background-color: #f0f6fc;
     border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden; flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
 }
+
 .item-image img { width: 100%; height: 100%; object-fit: cover; }
 .placeholder-icon { color: #cbd5e0; font-size: 1.5rem; }
 
@@ -381,9 +438,106 @@ const goBack = () => {
 .item-details h4 { margin: 0 0 0.2rem 0; font-size: 0.95rem; }
 .item-details p { margin: 0 0 0.2rem 0; font-size: 0.8rem; color: #718096; }
 .item-qty { font-size: 0.8rem; color: #a0aec0; font-weight: 600; }
+.tracking-subtext { font-size: 0.8rem; color: #4a5568; margin-top: 0.2rem; }
+
+.item-price-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
 .item-price { font-weight: bold; color: #1e4770; font-size: 1rem; }
 
-/* Endereço */
+.item-delivery-timeline {
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed #eaeaea;
+}
+
+.mini-timeline {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin: 0.5rem 0;
+}
+
+.mini-timeline .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #a0aec0;
+    z-index: 2;
+}
+
+.mini-timeline .step.active {
+    color: #3b7bb9;
+    font-weight: bold;
+}
+
+.mini-timeline .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #cbd5e0;
+    margin-bottom: 0.3rem;
+}
+
+.mini-timeline .step.active .dot {
+    background-color: #3b7bb9;
+    box-shadow: 0 0 0 3px rgba(59, 123, 185, 0.2);
+}
+
+.cancelled-item-banner {
+    margin-top: 0.8rem;
+    padding: 0.5rem;
+    background-color: #fff5f5;
+    color: #c53030;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.returned-item-banner {
+    margin-top: 0.8rem;
+    padding: 0.5rem;
+    background-color: #fff5f5;
+    color: #c53030;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.item-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.8rem;
+}
+
+.btn-confirm-item {
+    background-color: #276749;
+    color: #ffffff;
+    border: none;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background 0.2s;
+}
+
+.btn-confirm-item:hover {
+    background-color: #22543d;
+}
+
 .address-text {
     font-size: 0.9rem;
     color: #4a5568;
@@ -391,7 +545,6 @@ const goBack = () => {
     margin: 0;
 }
 
-/* Financeiro */
 .financial-row {
     display: flex;
     justify-content: space-between;
@@ -399,6 +552,7 @@ const goBack = () => {
     color: #4a5568;
     font-size: 0.95rem;
 }
+
 .total-row {
     margin-top: 1rem;
     padding-top: 1rem;
@@ -407,6 +561,7 @@ const goBack = () => {
     color: #1e4770;
     font-size: 1.1rem;
 }
+
 .mt-3 { margin-top: 1rem; }
 .mt-2 { margin-top: 0.5rem; }
 
@@ -417,9 +572,9 @@ const goBack = () => {
     padding: 0.8rem;
     border-radius: 6px;
 }
+
 .payment-method p { margin: 0; }
 
-/* Botões */
 .btn-outline-full {
     width: 100%;
     padding: 0.8rem;
@@ -430,30 +585,20 @@ const goBack = () => {
     border-radius: 8px;
     cursor: pointer;
     transition: 0.3s;
-    display: flex; justify-content: center; align-items: center; gap: 0.5rem;
-}
-.btn-outline-full:hover {
-    background-color: #f0f0f0; border-color: #a0aec0;
 }
 
-.btn-cancel-full {
-    width: 100%;
-    padding: 0.8rem;
-    background-color: #fff5f5;
-    border: 1px solid #fed7d7;
-    color: #c53030;
-    font-weight: 600;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-.btn-cancel-full:hover {
-    background-color: #fed7d7;
+.btn-outline-full:hover {
+    background-color: #f0f0f0;
+    border-color: #a0aec0;
 }
 
 .loading-wrapper {
-    display: flex; justify-content: center; align-items: center;
-    height: 100vh; color: #718096; font-size: 1.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #718096;
+    font-size: 1.2rem;
 }
 
 @keyframes fadeIn {
@@ -461,7 +606,6 @@ const goBack = () => {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsivo */
 @media (max-width: 900px) {
     .details-grid { grid-template-columns: 1fr; }
     .main-summary { flex-direction: column; align-items: flex-start; gap: 1rem; }

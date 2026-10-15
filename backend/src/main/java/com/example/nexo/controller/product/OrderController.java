@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.nexo.dto.product.OrderCreateDTO;
 import com.example.nexo.dto.product.OrderFilteredResponseDTO;
 import com.example.nexo.dto.product.OrderResponseDTO;
+import com.example.nexo.dto.seller.SellerDashboardResponseDTO;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.service.product.OrderService;
 
@@ -45,6 +46,14 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+    @GetMapping("/seller/dashboard")
+    public ResponseEntity<SellerDashboardResponseDTO> getDashboardStats(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        SellerDashboardResponseDTO dashboardStats = orderService.getDashboardStats(user);
+        return ResponseEntity.ok(dashboardStats);
+    }
+    
+
     @GetMapping("/{orderCode}")
     public ResponseEntity<OrderResponseDTO> getOrderByCode(@PathVariable String orderCode, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
@@ -60,9 +69,9 @@ public class OrderController {
     }
 
     @GetMapping("/delivery/status")
-    public ResponseEntity<List<OrderFilteredResponseDTO>> getOrdersByDeliveryStatus(@RequestParam String status, Authentication authentication) {
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersByDeliveryStatus(@RequestParam String status, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-        List<OrderFilteredResponseDTO> orders = orderService.getSellerOrdersByDeliveryStatus(user, status);
+        List<OrderResponseDTO> orders = orderService.getSellerOrdersByDeliveryStatus(user, status);
         return ResponseEntity.ok(orders);
     }
 
@@ -107,10 +116,24 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
+    @PutMapping("/seller/{orderId}/delivered")
+    public ResponseEntity<OrderFilteredResponseDTO> markOrderAsDelivered(@PathVariable Long orderId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderFilteredResponseDTO order = orderService.markOrderAsDelivered(orderId, user);
+        return ResponseEntity.ok(order);
+    }
+
     @PutMapping("/seller/{orderId}/decline")
     public ResponseEntity<OrderFilteredResponseDTO> declineOrder(@PathVariable Long orderId, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         OrderFilteredResponseDTO order = orderService.declineOrder(orderId, user);
+        return ResponseEntity.ok(order);
+    }
+
+    @PutMapping("/{orderId}/confirm-delivery")
+    public ResponseEntity<OrderFilteredResponseDTO> confirmDelivery(@PathVariable Long orderId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        OrderFilteredResponseDTO order = orderService.confirmDelivery(orderId, user);
         return ResponseEntity.ok(order);
     }
 

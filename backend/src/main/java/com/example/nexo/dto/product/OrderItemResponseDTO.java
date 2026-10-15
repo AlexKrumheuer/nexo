@@ -5,6 +5,7 @@ import com.example.nexo.entity.product.DeliveryStatus;
 
 public record OrderItemResponseDTO (
     Long order,
+    Long itemId,
     ProductResponseDTO product,
     SellerResumedResponseDTO seller,
     DeliveryStatus shippingStatus,

@@ -1,8 +1,59 @@
 <script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useToast } from 'vue-toastification'
+import api from '../../services/api'
+import LoadingOverlay from '../LoadingOverlay.vue'
 
+const toast = useToast()
+const router = useRouter()
+
+const loading = ref(false)
+const stats = ref({
+    totalSales: 0,
+    pendingOrders: 0,
+    totalProducts: 0,
+    lowStock: 0,
+    latestOrders: []
+})
+
+onMounted(() => {
+    fetchDashboardData()
+})
+
+const fetchDashboardData = async () => {
+    loading.value = true
+    try {
+        const response = await api.get('/api/orders/seller/dashboard')
+        stats.value = response.data
+    } catch (e) {
+        console.error('Error fetching dashboard stats:', e)
+        toast.error('Failed to load dashboard data')
+    } finally {
+        loading.value = false
+    }
+}
+
+const formatCurrency = (value) => {
+    if (value === undefined || value === null) return '$0.00'
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+}
+
+const formatDate = (dateString) => {
+    if (!dateString) return ''
+    return new Date(dateString).toLocaleDateString('en-US', {
+        day: '2-digit', month: 'short', year: 'numeric'
+    })
+}
+
+const viewOrderDetails = (orderCode) => {
+    router.push(`/my-orders/${orderCode}`)
+}
 </script>
 
 <template>
+    <LoadingOverlay v-if="loading" />
+    
     <div class="dashboard-container">
         <h1>Overview</h1>
         
@@ -12,8 +63,8 @@
                     <fa icon="dollar-sign" />
                 </div>
                 <div class="stat-info">
-                    <span class="label">Today's SAles</span>
-                    <span class="value">R$ 1.250,00</span>
+                    <span class="label">Today's Sales</span>
+                    <span class="value">{{ formatCurrency(stats.totalSales) }}</span>
                 </div>
             </div>
 
@@ -23,7 +74,7 @@
                 </div>
                 <div class="stat-info">
                     <span class="label">Pending Orders</span>
-                    <span class="value">5</span>
+                    <span class="value">{{ stats.pendingOrders }}</span>
                 </div>
             </div>
 
@@ -33,7 +84,7 @@
                 </div>
                 <div class="stat-info">
                     <span class="label">Total Products</span>
-                    <span class="value">42</span>
+                    <span class="value">{{ stats.totalProducts }}</span>
                 </div>
             </div>
             
@@ -43,7 +94,7 @@
                 </div>
                 <div class="stat-info">
                     <span class="label">Low Stock</span>
-                    <span class="value">3</span>
+                    <span class="value">{{ stats.lowStock }}</span>
                 </div>
             </div>
         </div>
@@ -55,36 +106,40 @@
             </div>
             
             <div class="table-container">
-                <table>
+                <table v-if="stats.latestOrders && stats.latestOrders.length > 0">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Client</th>
+                            <th>Order Code</th>
+                            <th>Customer</th>
+                            <th>Product</th>
                             <th>Date</th>
                             <th>Value</th>
-                            <th>Status</th>
-                            <th>Action</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#1024</td>
-                            <td>Maria Silva</td>
-                            <td>14/02/2026</td>
-                            <td>R$ 150,00</td>
-                            <td><span class="status-badge warning">Pendente</span></td>
-                            <td><button class="btn-action">Ver</button></td>
-                        </tr>
-                        <tr>
-                            <td>#1023</td>
-                            <td>João Souza</td>
-                            <td>13/02/2026</td>
-                            <td>R$ 89,90</td>
-                            <td><span class="status-badge success">Enviado</span></td>
-                            <td><button class="btn-action">Ver</button></td>
+                        <tr v-for="item in stats.latestOrders" :key="item.id">
+                            <td class="font-semibold">#{{ item.orderCode }}</td>
+                            <td>{{ item.user?.username || item.user?.name || 'Customer' }}</td>
+                            <td>{{ item.product?.title || 'N/A' }}</td>
+                            <td>{{ formatDate(item.createdAt) }}</td>
+                            <td class="font-bold">{{ formatCurrency((item.product?.price || 0) * item.quantity) }}</td>
+                            <td class="text-center">
+                                <span :class="`status-badge status-${(item.shippingStatus || item.status || '').toLowerCase()}`">
+                                    {{ item.shippingStatus === 'PENDING_SELLER' ? item.status : (item.shippingStatus || item.status) }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn-action" @click="viewOrderDetails(item.orderCode)">View</button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
+
+                <div v-else-if="!loading" class="empty-orders">
+                    <p>No recent orders found.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -140,7 +195,6 @@
 .stat-info .label { font-size: 0.85rem; color: #64748b; }
 .stat-info .value { font-size: 1.25rem; font-weight: bold; color: #0f172a; }
 
-/* Tabela */
 .recent-orders-section {
     background: white;
     padding: 20px;
@@ -155,31 +209,97 @@
     margin-bottom: 15px;
 }
 
-.view-all { color: #3b82f6; text-decoration: none; font-size: 0.9rem; }
+.section-header h3 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.1rem;
+}
+
+.view-all { 
+    color: #3b82f6; 
+    text-decoration: none; 
+    font-size: 0.9rem; 
+    font-weight: 600;
+}
+.view-all:hover { text-decoration: underline; }
 
 .table-container { overflow-x: auto; }
 
 table { width: 100%; border-collapse: collapse; }
 
-th { text-align: left; color: #64748b; font-size: 0.85rem; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+th { 
+    text-align: left; 
+    color: #64748b; 
+    font-size: 0.85rem; 
+    padding: 12px; 
+    border-bottom: 1px solid #e2e8f0; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+}
 td { padding: 12px; font-size: 0.9rem; color: #334155; border-bottom: 1px solid #f1f5f9; }
 
+.text-center { text-align: center; }
+.font-semibold { font-weight: 600; color: #1e293b; }
+.font-bold { font-weight: 700; color: #0f172a; }
+
 .status-badge {
-    padding: 4px 8px;
+    padding: 4px 10px;
     border-radius: 20px;
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 600;
+    display: inline-block;
+    text-transform: uppercase;
 }
-.status-badge.warning { background: #ffedd5; color: #9a3412; }
-.status-badge.success { background: #dcfce7; color: #166534; }
+
+.status-pending,
+.status-awaiting_payment,
+.status-pending_seller,
+.status-awaiting_shipment {
+    background-color: #feebc8;
+    color: #7b341e;
+    border: 1px solid #fbd38d;
+}
+
+.status-shipped {
+    background-color: #bee3f8;
+    color: #2a4365;
+    border: 1px solid #90cdf4;
+}
+
+.status-paid,
+.status-delivered,
+.status-finished {
+    background-color: #c6f6d5;
+    color: #22543d;
+    border: 1px solid #9ae6b4;
+}
+
+.status-cancelled,
+.status-returned {
+    background-color: #fed7d7;
+    color: #742a2a;
+    border: 1px solid #feb2b2;
+}
 
 .btn-action {
     background: none;
     border: 1px solid #cbd5e1;
-    border-radius: 4px;
-    padding: 4px 10px;
+    border-radius: 6px;
+    padding: 5px 12px;
     cursor: pointer;
     font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    transition: all 0.2s;
 }
-.btn-action:hover { background: #f8fafc; }
+.btn-action:hover { 
+    background: #f1f5f9; 
+    color: #0f172a; 
+}
+
+.empty-orders {
+    padding: 2rem;
+    text-align: center;
+    color: #94a3b8;
+}
 </style>

@@ -15,7 +15,7 @@ import com.example.nexo.dto.product.OrderCreateDTO;
 import com.example.nexo.dto.product.OrderFilteredResponseDTO;
 import com.example.nexo.dto.product.OrderItemCreateDTO;
 import com.example.nexo.dto.product.OrderResponseDTO;
-import com.example.nexo.dto.product.ProductResponseDTO;
+import com.example.nexo.dto.seller.SellerDashboardResponseDTO;
 import com.example.nexo.entity.order.OrderItem;
 import com.example.nexo.entity.order.PaymentType;
 import com.example.nexo.entity.product.DeliveryStatus;
@@ -26,13 +26,13 @@ import com.example.nexo.entity.user.Address;
 import com.example.nexo.entity.user.Seller;
 import com.example.nexo.entity.user.User;
 import com.example.nexo.infra.exception.ProductException;
+import com.example.nexo.repository.order.CartRepository;
 import com.example.nexo.repository.order.OrderItemRepository;
 import com.example.nexo.repository.order.OrderRepository;
 import com.example.nexo.repository.product.ProductRepository;
 import com.example.nexo.repository.user.AddressRepository;
 import com.example.nexo.repository.user.SellerRepository;
 import com.example.nexo.specification.OrderSellerSpec;
-import com.example.nexo.specification.ProductSpecs;
 import com.example.nexo.util.Mapper;
 
 import jakarta.transaction.Transactional;
@@ -48,6 +48,7 @@ public class OrderService {
     private final SellerRepository sellerRepository;
     private final AddressRepository addressRepository;
     private final Mapper mapper;
+    private final CartRepository cartRepository;
 
 
     @Transactional
@@ -56,6 +57,31 @@ public class OrderService {
         return orders.stream()
                 .map(mapper::MapperOrderResponse)
                 .toList();
+    }
+
+    @Transactional
+    public SellerDashboardResponseDTO getDashboardStats(User user) {
+
+        Seller seller = sellerRepository.findSellerByUser(user)
+            .orElseThrow(() -> new ProductException("This user is not a seller", HttpStatus.NOT_FOUND));
+
+        LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        BigDecimal calculateTotalSalesBySeller = orderRepository.calculateTotalSalesBySeller(user.getId());
+        Integer pendingOrders = orderItemRepository.countBySellerAndShippingStatusIn(seller, List.of(DeliveryStatus.PENDING_SELLER, DeliveryStatus.AWAITING_SHIPMENT, DeliveryStatus.SHIPPED));
+        Integer totalProducts = productRepository.countBySeller(seller);
+        Integer lowStock = productRepository.countBySellerAndStockQuantityLessThanEqual(seller, 5);
+
+        List<OrderItem> orders = orderItemRepository.findBySeller(seller);
+        return new SellerDashboardResponseDTO(
+                calculateTotalSalesBySeller,
+                pendingOrders,
+                totalProducts,
+                lowStock,
+                orders.stream()
+                        .map(mapper::MapperOrderFilteredResponse)
+                        .toList()
+        );
     }
 
     @Transactional
@@ -85,23 +111,21 @@ public class OrderService {
     }
 
     @Transactional 
-    public List<OrderFilteredResponseDTO> getSellerOrdersByDeliveryStatus(User user, String status) {
+    public List<OrderResponseDTO> getSellerOrdersByDeliveryStatus(User user, String status) {
         
-        Seller seller = sellerRepository.findSellerByUser(user)
-                .orElseThrow(() -> new ProductException("This User is not a Seller", HttpStatus.NOT_FOUND));
-        List<OrderItem> orderItems = new ArrayList<>();
+        List<Order> orders = new ArrayList<>();
 
         if(status.equalsIgnoreCase("in_progress")){
-            orderItems = orderItemRepository.findBySellerAndShippingStatusIn(seller, List.of(DeliveryStatus.PENDING_SELLER, DeliveryStatus.AWAITING_SHIPMENT, DeliveryStatus.SHIPPED));
+            orders = orderRepository.findOrdersByDeliveryStatus(user, List.of(DeliveryStatus.PENDING_SELLER, DeliveryStatus.AWAITING_SHIPMENT, DeliveryStatus.SHIPPED));
         } else if(status.equalsIgnoreCase("confirmed")){
-            orderItems = orderItemRepository.findBySellerAndShippingStatusIn(seller, List.of(DeliveryStatus.DELIVERED));
+            orders = orderRepository.findOrdersByDeliveryStatus(user, List.of(DeliveryStatus.DELIVERED, DeliveryStatus.FINISHED));
         } else if(status.equalsIgnoreCase("cancelled")) {
-            orderItems = orderItemRepository.findBySellerAndShippingStatusIn(seller, List.of(DeliveryStatus.CANCELLED, DeliveryStatus.RETURNED));
+            orders = orderRepository.findOrdersByDeliveryStatus(user, List.of(DeliveryStatus.CANCELLED, DeliveryStatus.RETURNED));
         }
 
 
-        return orderItems.stream()
-                .map(mapper::MapperOrderFilteredResponse)
+        return orders.stream()
+                .map(mapper::MapperOrderResponse)
                 .toList();
     }
 
@@ -140,6 +164,8 @@ public class OrderService {
         return page.map(mapper::MapperOrderFilteredResponse);
     }
 
+
+    // Create an order based on the provided OrderCreateDTO and the authenticated user
     @Transactional
     public OrderResponseDTO createOrder(OrderCreateDTO dto, User user) {
         
@@ -149,6 +175,7 @@ public class OrderService {
         BigDecimal subtotal = BigDecimal.ZERO; // Sum of all original values (without discount)
         BigDecimal totalDiscount = BigDecimal.ZERO; // Sum of all the money saved
         BigDecimal totalToPay = BigDecimal.ZERO; // What the customer really will pay for the items
+        List<Product> productIds = new ArrayList<>();
 
         for (OrderItemCreateDTO itemDto : dto.items()) {
             Product product = productRepository.findById(itemDto.product())
@@ -166,7 +193,11 @@ public class OrderService {
             orderItem.setSeller(seller);
             orderItem.setQuantity(itemDto.quantity());
             orderItem.setPriceAtPurchase(product.getFinalPrice());
+            orderItem.setShippingStatus(DeliveryStatus.PENDING_SELLER); // Avoid null value for shipping status
             orderItems.add(orderItem);
+
+
+            productIds.add(product);
 
             BigDecimal originalItemTotal = product.getPrice().multiply(quantity);
 
@@ -210,6 +241,10 @@ public class OrderService {
             orderItemRepository.save(item);
         }
 
+        if(!productIds.isEmpty()) {
+            cartRepository.deleteAllByUserAndProductIn(user, productIds);
+        }
+
         order.setOrderList(orderItems);
         order.setCreatedAt(LocalDateTime.now());
 
@@ -236,8 +271,11 @@ public class OrderService {
                 throw new ProductException("Not enough stock for product: " + product.getTitle(), HttpStatus.BAD_REQUEST);
             }
             product.setStockQuantity(product.getStockQuantity() - orderItem.getQuantity());
-            orderItem.setShippingStatus(DeliveryStatus.PENDING_SELLER);
             productRepository.save(product);
+
+
+            orderItem.setShippingStatus(DeliveryStatus.PENDING_SELLER);
+            orderItemRepository.save(orderItem);
         }
 
         // Simulate payment processing
@@ -266,6 +304,8 @@ public class OrderService {
         return mapper.MapperOrderFilteredResponse(orderItem);
     }
 
+
+    // When order is declined, the stock of the product is returned to the product and the order item is marked as CANCELLED   
     @Transactional 
     public OrderFilteredResponseDTO declineOrder(Long orderId, User user) {
         OrderItem orderItem = orderItemRepository.findById(orderId)
@@ -279,12 +319,18 @@ public class OrderService {
             throw new ProductException("Order item is not pending seller acceptance", HttpStatus.BAD_REQUEST);
         }
 
+        // Return the stock to the product
+        Product product = orderItem.getProduct();
+        product.setStockQuantity(product.getStockQuantity() + orderItem.getQuantity());
+        productRepository.save(product);
+
         orderItem.setShippingStatus(DeliveryStatus.CANCELLED);
         orderItemRepository.save(orderItem);
 
         return mapper.MapperOrderFilteredResponse(orderItem);
     }
 
+    // Change the order item status to SHIPPED when the seller ships the product
     @Transactional 
     public OrderFilteredResponseDTO shipOrder(Long orderId, User user) {
         OrderItem orderItem = orderItemRepository.findById(orderId)
@@ -313,7 +359,7 @@ public class OrderService {
             throw new ProductException("You are not authorized to cancel this order", HttpStatus.FORBIDDEN);
         }
 
-        if (orderItem.getShippingStatus() != DeliveryStatus.DELIVERED && orderItem.getShippingStatus() != DeliveryStatus.CANCELLED && orderItem.getShippingStatus() != DeliveryStatus.RETURNED) {
+        if (orderItem.getShippingStatus() == DeliveryStatus.DELIVERED || orderItem.getShippingStatus() == DeliveryStatus.CANCELLED || orderItem.getShippingStatus() == DeliveryStatus.RETURNED) {
             throw new ProductException("Order item cannot be cancelled at this stage", HttpStatus.BAD_REQUEST);
         }
 
@@ -337,6 +383,44 @@ public class OrderService {
         }
 
         orderItem.setShippingStatus(DeliveryStatus.RETURNED);
+        orderItemRepository.save(orderItem);
+
+        return mapper.MapperOrderFilteredResponse(orderItem);
+    }
+
+    @Transactional
+    public OrderFilteredResponseDTO markOrderAsDelivered(Long orderId, User user) {
+        OrderItem orderItem = orderItemRepository.findById(orderId)
+                .orElseThrow(() -> new ProductException("Order item not found", HttpStatus.NOT_FOUND));
+
+        if (!orderItem.getSeller().getUser().getId().equals(user.getId())) {
+            throw new ProductException("You are not authorized to mark this order as delivered", HttpStatus.FORBIDDEN);
+        }
+
+        if (orderItem.getShippingStatus() != DeliveryStatus.SHIPPED) {
+            throw new ProductException("Order item is not shipped yet", HttpStatus.BAD_REQUEST);
+        }
+
+        orderItem.setShippingStatus(DeliveryStatus.DELIVERED);
+        orderItemRepository.save(orderItem);
+
+        return mapper.MapperOrderFilteredResponse(orderItem);
+    }
+
+    @Transactional 
+    public OrderFilteredResponseDTO confirmDelivery(Long orderId, User user) {
+        OrderItem orderItem = orderItemRepository.findById(orderId)
+                .orElseThrow(() -> new ProductException("Order item not found", HttpStatus.NOT_FOUND));
+
+        if (!orderItem.getOrder().getUser().getId().equals(user.getId())) {
+            throw new ProductException("You are not authorized to confirm delivery for this order", HttpStatus.FORBIDDEN);
+        }
+
+        if (orderItem.getShippingStatus() != DeliveryStatus.DELIVERED) {
+            throw new ProductException("Order item is not delivered yet", HttpStatus.BAD_REQUEST);
+        }
+
+        orderItem.setShippingStatus(DeliveryStatus.FINISHED);
         orderItemRepository.save(orderItem);
 
         return mapper.MapperOrderFilteredResponse(orderItem);

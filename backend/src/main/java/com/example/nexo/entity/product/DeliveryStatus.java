@@ -6,6 +6,7 @@ public enum DeliveryStatus {
     AWAITING_SHIPMENT("AWAITING_SHIPMENT"), // Confirmed
     SHIPPED("SHIPPED"),
     DELIVERED("DELIVERED"),
+    FINISHED("FINISHED"),
     RETURNED("RETURNED"),
     CANCELLED("CANCELLED");
 
