@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import api from '../../services/api'
 import Validator from '../../util/Validator'
+import LoadingOverlay from '../LoadingOverlay.vue'
 
 const toast = useToast()
 const userStore = userUserStore()
@@ -238,6 +239,7 @@ onMounted(() => {
 </script>
 
 <template>
+    <LoadingOverlay v-if="loadingUpdateUser || loadingCreatingSeller || isUploadingFile" />
     <div class="profile-wrapper" v-if="!loading">
         <div class="perfil-images">
             <div class="user-banner"
